@@ -1,2 +1,4 @@
 work_dir: audines11
-sequences: /home/user1/run1/gisaid/sequences1010_10.fasta
+sequences: /home/user1/run1/gisaid/sequences1010.fasta
+datasets_dir: datasets
+lineages: "B2 "

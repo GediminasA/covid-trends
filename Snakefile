@@ -1,6 +1,10 @@
 tmp_dir = config["work_dir"]+"/tmp"
 rez_dir = config["work_dir"]+"/rez"
+lineages = config["lineages"].split()
 
+
+#initial clustering 
+include: "snakefiles/initial_clustering.smk"
 
 rule target:
     input:
@@ -88,7 +92,43 @@ rule run_pangolin:
     shell:
         """
             mkdir -p {params.tmp_dir}
-            pangolin -t {threads} --outfile {params.report} --outdir {params.out_dir}  --tempdir {params.tmp_dir}   --alignment-file {params.alignment}  --analysis-mode fast  --alignment {input.fasta}
+            pangolin --use-assignment-cache -t {threads} --outfile {params.report} --outdir {params.out_dir}  --tempdir {params.tmp_dir}   --alignment-file {params.alignment}  --analysis-mode fast  --alignment {input.fasta}
         """ 
- 
 
+
+rule download_covid_dataset:
+    output:
+        directory(config["datasets_dir"]+"/sars-cov-2")
+    shell:
+        """
+            nextclade dataset get --name 'sars-cov-2' --output-dir '{output[0]}'
+        """
+
+rule run_nextclade:
+    input:
+        fasta = config["sequences"],
+        data = config["datasets_dir"]+"/sars-cov-2"
+    output:
+        alignment = rez_dir+"/alignment_nextclasde.fasta.gz",
+        report = rez_dir+"/nextclade_report.csv",
+        S_alignment = rez_dir+"/gene_S.translation.fasta.gz" 
+    log:
+        "logs/nextclade.log"
+    conda:
+        "envs/nextclade.yaml"
+    threads: 80
+    params:
+        out_dir = rez_dir 
+    shell:
+        """
+       nextclade run --jobs {threads} --include-reference --output-translations \
+       {params.out_dir}/gene_{{gene}}.translation.fasta.gz --output-csv\
+       {output.report} --output-fasta \
+       {output.alignment}\
+       --input-dataset {input.data}\
+       {input.fasta} &> {log}
+        """
+    
+rule test:
+    input:
+        rez_dir+"/nextclade_report.csv"
