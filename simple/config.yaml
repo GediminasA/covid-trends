@@ -1,0 +1,27 @@
+cluster:
+  mkdir -p logs/{rule} &&
+  sbatch
+    --parsable
+    -n {threads}
+    -p main
+    --job-name={rule}
+    --output=logs/{rule}/{rule}-%j.out
+    --time=520
+restart-times: 0
+max-jobs-per-second: 10
+max-status-checks-per-second: 1
+local-cores: 1
+latency-wait: 60
+jobs: 500
+keep-going: True
+rerun-incomplete: True
+printshellcmds: True
+scheduler: greedy
+conda-frontend: mamba
+use-conda: True
+use-singularity: True
+cluster-status: simple/status-sacct-robust.sh
+cluster-cancel: scancel
+cluster-cancel-nargs: 50
+#--job-name=smk-{rule}-{wildcards}
+#--output=logs/{rule}/{rule}-{wildcards}-%j.out
