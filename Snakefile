@@ -6,6 +6,14 @@ lineages = config["lineages"].split()
 #initial clustering 
 include: "snakefiles/initial_clustering.smk"
 
+rule setup_R:
+    output:
+        config["work_dir"]+"/RsetupDone.txt"
+    conda:
+        "envs/R_env.yaml"
+    notebook:
+        "notebooks/setupR.r.ipynb"
+
 rule target:
     input:
         #rez = rez_dir+"/initial_set_minimap2_match_all.sam",
