@@ -6,11 +6,8 @@ rule clusteringI:
         #expand(rez_dir + "/lineages/{id}/alignment_nextclade_woG_derep1_mappings.ids",id=lineages),
         #expand(rez_dir + "/lineages/{id}/alignment_nextclade_derep.pssm",id=lineages)
         #rez_dir + "/lineages/alignment_nextclade_refseq_shortid.fasta.gz",
-        expand(rez_dir + "/lineages/{id}/alignment_nextclade_filtered_{k}_{t}.fasta.gz",
-        k=["0.7","0.8","0.9","0.95"],
-        t=["20","10","5","2"],
-        id=lineages)
-
+        expand(rez_dir + "/lineages/{id}/alignment_nextclade_filtered_0.8_20_woG_derep1_swarm.fasta",id=lineages)
+        #expand(rez_dir + "/lineages/{id}/alignment_nextclade_filtered_0.8_20_woG_derep1.fasta.gz",id=lineages)
 rule get_ids:
     input:
         pangolin = rez_dir+"/pangolin_lineage_report.csv",
@@ -65,8 +62,8 @@ rule individual_filter:
     input:
         in_file_name = rez_dir + "/lineages/{id}/alignment_nextclade.fasta.gz",
     output:
-        output_file_name = rez_dir + "/lineages/{id}/alignment_nextclade_filtered_{k}_{t}.fasta.gz", 
-        output_file_nonconspoz_name = rez_dir + "/lineages/{id}/alignment_nextclade_filtere_nonconspoz_{k}_{t}.fasta.gz",
+        output_file_name = rez_dir + "/lineages/{id}/alignment_nextclade_filtered_{k}_{t,\d+}.fasta.gz", 
+        output_file_nonconspoz_name = rez_dir + "/lineages/{id}/alignment_nextclade_filtere_nonconspoz_{k}_{t,\d+}.fasta.gz",
         rows_after_filter = rez_dir + "/lineages/{id}/alignment_nextclade_filtered_keptrows_{k}_{t}.txt", 
         columns_after_filter = rez_dir + "/lineages/{id}/alignment_nextclade_filtered_keptcolumns_{k}_{t}.txt", 
         conservation_data =  rez_dir + "/lineages/{id}/alignment_nextclade_filtered_consData_{k}_{t}.csv", 
@@ -110,8 +107,9 @@ rule remove_gaps:
     threads: 12
     shell:
         """
-            seqkit seq -w 0 -g  {input}  -o {output}
+            seqkit seq -w 0 -g  {input}  | gzip --stdout >  {output}
         """
+
 
 
 
@@ -119,7 +117,7 @@ rule rmident1:
     input:
         "{stem}.fasta.gz",
     output:
-        fa = temp("{stem}_derep1.fasta"),
+        fa = "{stem}_derep1.fasta",
         uc = "{stem}_derep1.fasta.uc"
     params:
     conda: "../envs/clustering_tools.yaml"
@@ -127,6 +125,21 @@ rule rmident1:
         '''
         vsearch    --derep_fulllength   {input}    --sizeout   --fasta_width 0  --output {output[0]} --uc {output.uc}
         '''
+
+rule swarm:
+    input:
+        "{stem}.fasta",
+    output:
+        fa = "{stem}_swarm.fasta",
+        uc = "{stem}_swarm.fasta.swarminfo"
+    params:
+    conda: "../envs/clustering_tools.yaml"
+    threads: 1000
+    shell:
+        '''
+        swarm -f --threads {threads} -z   -w {output[0]} -r -o {output.uc} {input}
+        '''
+
 rule parse_uc:
     input:
         uc = "{stem}.fasta.uc",

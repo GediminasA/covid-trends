@@ -1,0 +1,17 @@
+file                                                                       format  type  num_seqs         sum_len  min_len  avg_len  max_len
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.7_10.fasta.gz   FASTA   DNA    454,387  10,060,582,567   22,141   22,141   22,141
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.7_20.fasta.gz   FASTA   DNA    424,988   9,545,655,468   22,461   22,461   22,461
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.7_2.fasta.gz    FASTA   DNA    469,078   9,842,194,596   20,982   20,982   20,982
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.7_5.fasta.gz    FASTA   DNA    462,825   9,801,245,025   21,177   21,177   21,177
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.8_10.fasta.gz   FASTA   DNA    438,258   9,936,623,634   22,673   22,673   22,673
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.8_20.fasta.gz   FASTA   DNA    416,523   9,454,655,577   22,699   22,699   22,699
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.8_2.fasta.gz    FASTA   DNA    447,613   9,714,544,939   21,703   21,703   21,703
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.8_5.fasta.gz    FASTA   DNA    441,261   9,914,252,148   22,468   22,468   22,468
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.9_10.fasta.gz   FASTA   DNA    405,064   9,298,649,184   22,956   22,956   22,956
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.9_20.fasta.gz   FASTA   DNA    387,810   8,997,192,000   23,200   23,200   23,200
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.9_2.fasta.gz    FASTA   DNA    402,932   8,993,442,240   22,320   22,320   22,320
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.95_10.fasta.gz  FASTA   DNA    377,131   8,840,327,771   23,441   23,441   23,441
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.95_20.fasta.gz  FASTA   DNA    363,247   8,596,240,255   23,665   23,665   23,665
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.95_2.fasta.gz   FASTA   DNA    357,839   8,114,715,003   22,677   22,677   22,677
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.95_5.fasta.gz   FASTA   DNA    365,851   8,592,376,586   23,486   23,486   23,486
+audines11/rez/lineages/BA.2/alignment_nextclade_filtered_0.9_5.fasta.gz    FASTA   DNA    405,912   9,323,392,728   22,969   22,969   22,969
