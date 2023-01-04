@@ -1,3 +1,6 @@
+cleanup_keep_fraction_of_columns = str(config["cleanup_keep_fraction_of_columns"])
+cleanup_remove_proc_mostN_having = str(config["cleanup_remove_proc_mostN_having"])
+reference_lineage = config["reference_lineage"]
 rule clusteringI:    
     input:
         #expand(rez_dir+ "/lineages/{id}/ids.txt",id=lineages)
@@ -6,7 +9,10 @@ rule clusteringI:
         #expand(rez_dir + "/lineages/{id}/alignment_nextclade_woG_derep1_mappings.ids",id=lineages),
         #expand(rez_dir + "/lineages/{id}/alignment_nextclade_derep.pssm",id=lineages)
         #rez_dir + "/lineages/alignment_nextclade_refseq_shortid.fasta.gz",
-        expand(rez_dir + "/lineages/{id}/alignment_nextclade_filtered_0.8_20_woG_derep1_swarm.fasta",id=lineages)
+        expand(rez_dir + "/lineages/{id}/alignment_nextclade_filtered_{fr}_{topn}_woG_derep1.fasta",
+        id=lineages,
+        fr= cleanup_keep_fraction_of_columns,
+        topn=cleanup_remove_proc_mostN_having)
         #expand(rez_dir + "/lineages/{id}/alignment_nextclade_filtered_0.8_20_woG_derep1.fasta.gz",id=lineages)
 rule get_ids:
     input:
@@ -174,3 +180,51 @@ rule get_pssm:
         """
             goalign compute pssm -i {input} --auto-detect  -n 0 -t {threads} > {output}
         """
+
+# pairwise analysis
+rule get_kept_columns:
+    input:
+        ref_kept = rez_dir + "/lineages/"+reference_lineage+"/alignment_nextclade_filtered_keptcolumns_"+cleanup_keep_fraction_of_columns+"_"+cleanup_remove_proc_mostN_having+".txt",
+        id_kept = rez_dir + "/lineages/{id}/alignment_nextclade_filtered_keptcolumns_"+cleanup_keep_fraction_of_columns+"_"+cleanup_remove_proc_mostN_having+".txt",
+    params:
+        id = "{id}",
+        ref = reference_lineage
+    output:
+        id_kept = rez_dir + "/lineages/{id}/kept_columns_reference_based.txt",
+    log:
+        notebook = rez_dir + "/lineages/{id}/kept_columns_reference_based.r.ipynb.log",
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "../notebooks/get_common_rows.r.ipynb"
+
+        #ref_kept = rez_dir + "/lineages/{id}/alignment_nextclade_filtered_keptrows_{cleanup_keep_fraction_of_columns}_{cleanup_remove_proc_mostN_having}.txt",
+
+rule get_subset_alignments:
+    input:
+        columns_chosen = rez_dir + "/lineages/{id}/kept_columns_reference_based.txt",
+        rows_chosen_id = rez_dir + "/lineages/{id}/alignment_nextclade_filtered_keptrows_"+cleanup_keep_fraction_of_columns+"_"+cleanup_remove_proc_mostN_having+".txt",
+        rows_chosen_reference = rez_dir + "/lineages/"+reference_lineage+"/alignment_nextclade_filtered_keptrows_"+cleanup_keep_fraction_of_columns+"_"+cleanup_remove_proc_mostN_having+".txt",
+        aln_id = rez_dir + "/lineages/{id}/alignment_nextclade.fasta.gz",
+        aln_ref = rez_dir + "/lineages/"+reference_lineage+"/alignment_nextclade.fasta.gz",
+    output:
+        output_id = rez_dir + "/lineages/{id}/pair_id.fasta.gz",
+        output_ref = rez_dir + "/lineages/{id}/pair_ref.fasta.gz"
+    threads: 1000
+    log: rez_dir + "/lineages/{id}/pair_extract_names_columns_aln.ipynb"
+    shell:
+        """
+        papermill scripts/julia_modules/JuliaClusterAndTreeTools/notebooks/extract_names_columns_aln.ipynb \
+        {log} \
+        -p columns_chosen {input.columns_chosen} \
+        -p rows_chosen_id {input.rows_chosen_id} \
+        -p rows_chosen_reference {input.rows_chosen_reference} \
+        -p aln_id {input.aln_id} \
+        -p aln_ref {input.aln_ref} \
+        -p output_id {output.output_id} \
+        -p output_ref {output.output_ref} 
+        """
+rule test2:
+    input:
+        #expand(rez_dir + "/lineages/{id}/kept_rows.txt",id=["BA.2"])
+        expand(rez_dir + "/lineages/{id}/pair_id.fasta.gz",id=["BA.2"])
