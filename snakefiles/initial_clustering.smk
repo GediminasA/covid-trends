@@ -132,6 +132,22 @@ rule rmident1:
         vsearch    --derep_fulllength   {input}    --sizeout   --fasta_width 0  --output {output[0]} --uc {output.uc}
         '''
 
+rule swarmF:
+    input:
+        "{stem}.fasta",
+    output:
+        fa = "{stem}_swarmF.fasta",
+        uc = "{stem}_swarmF.fasta.swarminfo"
+    params:
+        gap_opening_penalty = 100,
+        gap_extension_penalty = 100
+    conda: "../envs/clustering_tools.yaml"
+    threads: 1000
+    shell:
+        '''
+        swarm -f --threads {threads} -z   -w {output[0]} -r -o {output.uc} {input} -e {params.gap_extension_penalty} -g {params.gap_opening_penalty}
+        '''
+
 rule swarm:
     input:
         "{stem}.fasta",
@@ -146,6 +162,21 @@ rule swarm:
         swarm -f --threads {threads} -z   -w {output[0]} -r -o {output.uc} {input}
         '''
 
+# rule swarm:
+#     input:
+#         "{stem}.fasta",
+#     output:
+#         fa = "{stem}_swarm.fasta",
+#         uc = "{stem}_swarm.fasta.swarminfo"
+#     params:
+#         gap_opening_penalty = 100,
+#         gap_extension_penalty = 100
+#     conda: "../envs/clustering_tools.yaml"
+#     threads: 1000
+#     shell:
+#         '''
+#         swarm -f --threads {threads} -z   -w {output[0]} -r -o {output.uc} {input} -e {params.gap_extension_penalty} -g {params.gap_opening_penalty}
+#         '''
 rule parse_uc:
     input:
         uc = "{stem}.fasta.uc",
@@ -224,7 +255,50 @@ rule get_subset_alignments:
         -p output_id {output.output_id} \
         -p output_ref {output.output_ref} 
         """
+
+
+#replaces gaps with 'a'
+rule replace_gaps:
+    input:
+        "{stem}.fasta.gz"
+    output:
+        "{stem}_Gap2a.fasta.gz"
+    log:
+        "{stem}_Gap2a.log"
+    shell:
+        """
+        papermill scripts/julia_modules/JuliaClusterAndTreeTools/notebooks/replace_gaps.ipynb \
+        {log} \
+        -p in_file_name {input} \
+        -p output_file_name {output} 
+        """
+
+#analyse clusterings
+rule amalyze_pair_derep:
+    input:
+        data = rez_dir + "/lineages/{id}/data.csv",
+        data_ref = rez_dir + "/lineages/"+reference_lineage+"/data.csv",
+        id = rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1.fasta.uc",
+        ref = rez_dir + "/lineages/{id}/pair_ref_Gap2a_derep1.fasta.uc",
+        setupmark = config["work_dir"]+"/RsetupDone.txt"
+    log:
+        notebook = rez_dir + "/lineages/{id}/pair_ref_derep_data.r.ipynb"
+    output:
+        ref = rez_dir + "/lineages/{id}/pair_ref_derep_data.csv"
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "../notebooks/analyse_derep_pair.r.ipynb"
+
 rule test2:
     input:
         #expand(rez_dir + "/lineages/{id}/kept_rows.txt",id=["BA.2"])
-        expand(rez_dir + "/lineages/{id}/pair_id.fasta.gz",id=["BA.2"])
+        expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta",id=["Q.1","B.1.1.7"]),
+        expand(rez_dir + "/lineages/{id}/pair_ref_Gap2a_derep1_swarm.fasta",id=["Q.1","B.1.1.7"])
+
+rule test3:
+    input:
+        ##expand(rez_dir + "/lineages/{id}/kept_rows.txt",id=["BA.2"])
+        #expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta",id=["Q.1","B.1.1.7"]),
+        #expand(rez_dir + "/lineages/{id}/pair_ref_Gap2a_derep1_swarm.fasta",id=["Q.1","B.1.1.7"])
+        rez_dir + "/lineages/Q.1/pair_ref_derep_data.csv"

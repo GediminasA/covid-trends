@@ -1,7 +1,7 @@
 tmp_dir = config["work_dir"]+"/tmp"
 rez_dir = config["work_dir"]+"/rez"
 lineages = config["lineages"].split()
-
+reference_lineage = config["reference_lineage"]
 
 #initial clustering 
 include: "snakefiles/initial_clustering.smk"
