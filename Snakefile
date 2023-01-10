@@ -5,6 +5,7 @@ reference_lineage = config["reference_lineage"]
 
 #initial clustering 
 include: "snakefiles/initial_clustering.smk"
+include: "snakefiles/s_protein_analysis.smk"
 
 rule setup_R:
     output:

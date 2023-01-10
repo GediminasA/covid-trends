@@ -1,6 +1,7 @@
 cleanup_keep_fraction_of_columns = str(config["cleanup_keep_fraction_of_columns"])
 cleanup_remove_proc_mostN_having = str(config["cleanup_remove_proc_mostN_having"])
 reference_lineage = config["reference_lineage"]
+lineages4summary = set(lineages) - set([config["reference_lineage"]])
 rule clusteringI:    
     input:
         #expand(rez_dir+ "/lineages/{id}/ids.txt",id=lineages)
@@ -27,6 +28,20 @@ rule get_ids:
     threads: 12
     notebook:
         "notebooks/filter_out_lioneage.r.ipynb"
+
+rule get_ids_lt:
+    input:
+        data = rez_dir + "/lineages/{id}/data.csv",
+    output:
+        ids = rez_dir + "/lineages/{id}/ids_lt.txt",
+    params:
+        id = "{id}"
+    threads: 12
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "notebooks/filter_out_ltseqs.r.ipynb"
+
 
 rule extract_alignment:
     input:
@@ -153,13 +168,14 @@ rule swarm:
         "{stem}.fasta",
     output:
         fa = "{stem}_swarm.fasta",
-        uc = "{stem}_swarm.fasta.swarminfo"
+        uc = "{stem}_swarm.fasta.swarminfo",
+        stru = "{stem}_swarm.fasta.internstr"
     params:
     conda: "../envs/clustering_tools.yaml"
     threads: 1000
     shell:
         '''
-        swarm -f --threads {threads} -z   -w {output[0]} -r -o {output.uc} {input}
+        swarm -f --threads {threads} -z -d 1   -w {output[0]} -r -i {output.stru} -o {output.uc} {input}
         '''
 
 # rule swarm:
@@ -290,6 +306,45 @@ rule amalyze_pair_derep:
     notebook:
         "../notebooks/analyse_derep_pair.r.ipynb"
 
+rule sumap_pair_derep:
+    input:
+        refs= expand(rez_dir + "/lineages/{id}/pair_ref_derep_data.csv", id = lineages4summary)
+    output:
+        rez_dir + "/pairwise_derep_results.csv" 
+    log:
+        notebook = rez_dir + "/pairwise_derep_results.csv"
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "../notebooks/summarise_derep_pair.r.ipynb"
+
+     
+rule cleanup_swarm_clusters:
+    input:
+        id = rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta.swarminfo",
+    output:
+        id = rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta.swarminfo.cleaned.txt"
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "../notebooks/clean_swarm.r.ipynb"
+
+rule split_swarm_clusters:
+    input:
+        swarm =  rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta.swarminfo.cleaned.txt",
+        fasta = rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1.fasta",
+    output:
+        swarm_single =  rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta.swarminfo.cleaned_single.txt",
+    run:
+        print(input[0])
+        print(input[1])
+        print(output[0])
+
+        
+
+
+
+
 rule test2:
     input:
         #expand(rez_dir + "/lineages/{id}/kept_rows.txt",id=["BA.2"])
@@ -301,4 +356,12 @@ rule test3:
         ##expand(rez_dir + "/lineages/{id}/kept_rows.txt",id=["BA.2"])
         #expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta",id=["Q.1","B.1.1.7"]),
         #expand(rez_dir + "/lineages/{id}/pair_ref_Gap2a_derep1_swarm.fasta",id=["Q.1","B.1.1.7"])
-        rez_dir + "/lineages/Q.1/pair_ref_derep_data.csv"
+        #rez_dir + "/lineages/Q.1/pair_ref_derep_data.csv"
+        rez_dir + "/pairwise_derep_results.csv" 
+
+rule test4:
+    input:
+        expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta.swarminfo",id=["B.1.1.7"])
+
+
+# expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta.swarminfo.cleaned_single.txt",id=["B.1.1.7"])
