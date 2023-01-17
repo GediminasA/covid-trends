@@ -15,15 +15,15 @@ df2 <- df %>%
   slice_head(n=1) %>%
   ungroup() %>%
   mutate(Identity4Seq=Matches/abs(End-Start),Coverage=abs(End-Start)/Length,CoverageRef=abs(End-Start)/30000,Identity4Aln=Matches/AlignmentLength,Identity4Ref=Matches/LengthRef) %>%
-  mutate(Identity4RefRound=round(Identity4Ref,digits=4)) %>%
-  mutate(Identity4SeqRound=round(Identity4Seq,digits=4)) %>%
+  mutate(Identity4RefRound=round(Identity4Ref,digits=5)) %>%
+  mutate(Identity4SeqRound=round(Identity4Seq,digits=5)) %>%
   filter(Identity4RefRound >= 0.9000)
 
 dfadditional <- df2 %>%
   filter(Identity4SeqRound >= additional_id_cut_off)
 additional_ids = as.vector(unique(dfadditional$Sequence))
 
-range_c = seq(0.9500,0.9999,0.0001)
+range_c = seq(0.9997,1.0,0.00001)
 range_n  = lapply(range_c,function(s){
   df = df2 %>%
     filter(Identity4SeqRound >= as.double(s))
@@ -31,6 +31,7 @@ range_n  = lapply(range_c,function(s){
 })
 
 dfw = data.frame(limit=range_c,count = unlist(range_n))
+print(dfw)
 dfw2 <- dfw %>%
   filter(count <= targetamount) %>%
   arrange(-count)

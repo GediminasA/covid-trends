@@ -6,7 +6,7 @@ reference_lineage = config["reference_lineage"]
 #initial clustering 
 include: "snakefiles/initial_clustering.smk"
 include: "snakefiles/s_protein_analysis.smk"
-
+include: "snakefiles/mink_analysis.smk"
 rule setup_R:
     output:
         config["work_dir"]+"/RsetupDone.txt"
@@ -139,5 +139,9 @@ rule run_nextclade:
         """
     
 rule test:
+    input:
+        rez_dir+"/nextclade_report.csv"
+
+rule rule:
     input:
         rez_dir+"/nextclade_report.csv"

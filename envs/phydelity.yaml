@@ -1,0 +1,14 @@
+channels:
+   - conda-forge
+   - gurobi 
+   - etetoolkit
+dependencies:
+   - python=2.7
+   - numpy
+   - scipy
+   - ete3 
+   - cython 
+   - pandas
+   - gurobi
+   - pip:
+      - git+https://github.com/alvinxhan/Phydelity.git 

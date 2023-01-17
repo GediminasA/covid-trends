@@ -15,6 +15,7 @@ rule clusteringI:
         fr= cleanup_keep_fraction_of_columns,
         topn=cleanup_remove_proc_mostN_having)
         #expand(rez_dir + "/lineages/{id}/alignment_nextclade_filtered_0.8_20_woG_derep1.fasta.gz",id=lineages)
+
 rule get_ids:
     input:
         pangolin = rez_dir+"/pangolin_lineage_report.csv",
@@ -97,7 +98,7 @@ rule individual_filter:
     log: rez_dir + "/lineages/{id}/alignment_nextclade_filtered_parsed_{k}_{t}.ipynb"
     shell:
         """
-        papermill scripts/julia_modules/JuliaClusterAndTreeTools/notebooks/test_aln.ipynb \
+        papermill  scripts/julia_modules/JuliaClusterAndTreeTools/notebooks/test_aln.ipynb \
         {log} \
         -p in_file_name {input.in_file_name} \
         -p  output_file_name {output.output_file_name} \
@@ -257,7 +258,7 @@ rule get_subset_alignments:
     output:
         output_id = rez_dir + "/lineages/{id}/pair_id.fasta.gz",
         output_ref = rez_dir + "/lineages/{id}/pair_ref.fasta.gz"
-    threads: 1000
+    threads: 16
     log: rez_dir + "/lineages/{id}/pair_extract_names_columns_aln.ipynb"
     shell:
         """
@@ -273,6 +274,24 @@ rule get_subset_alignments:
         """
 
 
+rule get_subset_alignments_common_cleaned:
+    input:
+        columns_chosen = expand(rez_dir + "/lineages/{id}/kept_columns_reference_based.txt", id = lineages),
+        rows_chosen_id = rez_dir + "/lineages/{id}/alignment_nextclade_filtered_keptrows_"+cleanup_keep_fraction_of_columns+"_"+cleanup_remove_proc_mostN_having+".txt",
+        aln_id = rez_dir + "/lineages/{id}/alignment_nextclade.fasta.gz",
+    output:
+        output_id = rez_dir + "/lineages/{id}/common_id.fasta.gz",
+    threads: 1000
+    log: rez_dir + "/lineages/{id}/pair_extract_names_columns_aln_common.ipynb"
+    shell:
+        """
+        papermill scripts/julia_modules/JuliaClusterAndTreeTools/notebooks/pair_extract_names_columns_aln_common.ipynb \
+        {log} \
+        -p columns_chosen "{input.columns_chosen}" \
+        -p rows_chosen_id "{input.rows_chosen_id}" \
+        -p aln_id {input.aln_id} \
+        -p output_id {output.output_id} 
+        """
 #replaces gaps with 'a'
 rule replace_gaps:
     input:
@@ -305,6 +324,20 @@ rule amalyze_pair_derep:
         "../envs/R_env.yaml"
     notebook:
         "../notebooks/analyse_derep_pair.r.ipynb"
+
+rule amalyze_common_derep:
+    input:
+        datas = expand(rez_dir + "/lineages/{id}/data.csv", id = lineages),
+        ids = expand(rez_dir + "/lineages/{id}/common_id_derep1.fasta.uc", id = lineages),
+        setupmark = config["work_dir"]+"/RsetupDone.txt"
+    log:
+        notebook = rez_dir + "/lineages/common/common_ref_derep_data.r.ipynb"
+    output:
+        ref = rez_dir + "/lineages/common/common_ref_derep_data.csv"
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "../notebooks/analyse_derep_common.r.ipynb"
 
 rule sumap_pair_derep:
     input:
@@ -353,15 +386,16 @@ rule test2:
 
 rule test3:
     input:
-        ##expand(rez_dir + "/lineages/{id}/kept_rows.txt",id=["BA.2"])
-        #expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta",id=["Q.1","B.1.1.7"]),
+        expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta",id=["Q.1","B.1.1.7"]),
         #expand(rez_dir + "/lineages/{id}/pair_ref_Gap2a_derep1_swarm.fasta",id=["Q.1","B.1.1.7"])
         #rez_dir + "/lineages/Q.1/pair_ref_derep_data.csv"
-        rez_dir + "/pairwise_derep_results.csv" 
+        #rez_dir + "/pairwise_derep_results.csv" 
 
 rule test4:
     input:
-        expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta.swarminfo",id=["B.1.1.7"])
+        ref = rez_dir + "/lineages/common/common_ref_derep_data.csv"
+        #output_id = expand(rez_dir + "/lineages/{id}/common_id.fasta.gz", id = ["Q.1"])
+        #expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta.swarminfo",id=["B.1.1.7"])
 
 
 # expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta.swarminfo.cleaned_single.txt",id=["B.1.1.7"])
