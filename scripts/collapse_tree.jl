@@ -163,6 +163,7 @@ function main()
     close(FF)
     F=outdata 
     FF = open(F,"w")
+    print(data_joined)
     JSON.print(FF, data_joined)
     close(FF)
 

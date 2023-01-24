@@ -60,7 +60,7 @@ function main()
             @collect DataFrame
         end
         #println(first(data2,10))
-        data3 = @from i in data begin
+        data3 = @from i in data2 begin
             @orderby descending(i.size)
             @where !(i.node in covered_nodes)
             @select i

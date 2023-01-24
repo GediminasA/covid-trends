@@ -3,12 +3,23 @@ outdir = config["work_dir"]+"/mink_phylogeny"
 rule minks:
     input:
         #data = rez_dir + "/lineages/mink/data.csv",
-        rez = rez_dir + "/initial_set_minimap2_match_all.sam"
-        #fasta = rez_dir+"/tmp/lineages_all.fasta"
+        rez = rez_dir + "/initial_set_minimap2_match_all.sam",
+        ids = outdir+"/tmp/minimap2_match_chosen.ids",
+        alignment = outdir+"/tmp/minimap2_match_chosen_aligned.fasta",
+        initialtree = outdir+"/tmp/minimap2_match_chosen_aligned_veryfast.nwk",
+        tree = outdir+"/output/initialtree.nwk",
+        treeajusted = outdir+"/tmp/initialtreeTrimmedRooted.nwk",
+        treeajusted2 = outdir+"/tmp/initialtreeTrimmed.nwk",
+        clusters = outdir+"/output/clusters.txt",
+        treefocused = outdir+"/output/focused.nwk",
+        treefocusedcollapsed = outdir+"/output/focused_collapsed2.nwk",
+        #fasta = rez_dir+"/tmp/lineages_all_woN.fasta"
+        #fasta = rez_dir+"/tmp/lineages_all.id"
 
 rule get_all_clean_ids:
     input:
-        nextclade = rez_dir+"/nextclade_report.csv"
+        nextclade = rez_dir+"/nextclade_report.csv",
+        lineagedata = rez_dir + "/lineages/mink/data.csv",
     output:
         fasta = rez_dir+"/tmp/lineages_all.id"
     threads: 12
@@ -78,9 +89,9 @@ rule remove_n_subs:
 
 rule remove_n_alls:
     input:
-        fasta = config["sequences"]
+        fasta = rez_dir+"/tmp/lineages_all.fasta"
     output:
-        raw_woN = temp(rez_dir+"/tmp/lineages_all_woN.fasta")
+        raw_woN = rez_dir+"/tmp/lineages_all_woN.fasta"
     conda:
         "../envs/searchsimilar.yaml"
     shell:
@@ -92,7 +103,8 @@ rule closestv2:
         reference_index = rez_dir + "/lineages/mink/sequences_woN_hisat2.1.ht2",
         fasta = rez_dir+"/tmp/lineages_all_woN.fasta"
     output:
-        rez = rez_dir+"/initial_set_minimap2_match_all.sam"
+        rez = rez_dir+"/initial_set_minimap2_match_all.sam",
+        match = rez_dir+"/initial_set_minimap2_match_all_matched.fasta"
     params:
         index = rez_dir + "/lineages/mink/sequences_woN_hisat2",
     conda:
@@ -100,29 +112,42 @@ rule closestv2:
     threads: 80
     shell:
         """
-        hisat2 -p {threads}  -x {params.index}  -f {input.fasta}   --no-spliced-alignment  -k 2 > {output}
+        hisat2 --no-unal  --al {output.match}  --no-spliced-alignment  -k 2 -p {threads}  -x {params.index}  -f {input.fasta}  -S {output.rez}
         """
+
+rule fixmdtags:
+    input:
+        sam = rez_dir+"/initial_set_minimap2_match_all.sam",
+        reference = rez_dir + "/lineages/mink/sequences_woN.fasta",
+    output:
+        sam = rez_dir+"/initial_set_minimap2_match_all_fixmd.sam",
+    threads: 4
+    shell:
+        """
+            samtools calmd -@ 4 {input.sam} {input.reference} > {output.sam}
+        """
+    
 
 rule sam_paf:
     input: "{stem}.sam"
     output: "{stem}.paf"
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     shell: " paftools.js sam2paf -p  {input} > {output}"
 
 rule sortminimap:
     input:
-        rez2 = rez_dir+"/initial_set_minimap2_match_all.paf"
+        rez2 = rez_dir+"/initial_set_minimap2_match_all_fixmd.paf"
     output: 
         ids = outdir+"/tmp/minimap2_match_chosen.ids",
         ids_target = outdir+"/tmp/minimap2_match_chosen.ids_target",
         ids_additional = outdir+"/tmp/minimap2_match_chosen.ids_additional",
     conda:
-        "envs/r.yaml"
+        "../envs/r.yaml"
     params:
         target_amount = config["target_amount"] 
     script:
-        "scripts/minimap.R"    
+        "../scripts/minimap.R"    
 
 
 # below borrowed rules for pphylogenetic analyses
@@ -134,7 +159,7 @@ rule extract_top_seqyences:
        fasta_ini = outdir+"/tmp/minimap2_match_chosen_ini_not_ordered.fa",
     threads: 80
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     shell:
         "seqkit grep -n -j {threads} -f {input.ids} -o {output} -w 0 -i {input.fasta} "
 
@@ -146,20 +171,9 @@ rule get_top_sequences:
     output:
        fasta_final = outdir+"/tmp/minimap2_match_chosen.fasta",
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     shell:
        "  rm -f {input.fasta_ini}.fai ; seqkit faidx {input.fasta_ini} --infile-list {input.ids} -w 0 -o {output} "
-
-
-
-rule add_sub_sequences:
-    input:
-        fasta_chosen = outdir+"/tmp/minimap2_match_chosen.fasta",
-        fasta_sub = outdir+"/tmp/lineages_sub.fasta",
-    output:
-        sequences = outdir+"/tmp/minimap2_match_chosen_plus_sub.fasta",
-    shell:
-        " cat {input} > {output} "
 
 
 rule align:
@@ -169,13 +183,13 @@ rule align:
           - filling gaps with N
         """
     input:
-        sequences = outdir+"/tmp/minimap2_match_chosen_plus_sub.fasta",
+        sequences = outdir+"/tmp/minimap2_match_chosen.fasta",
         reference = config["reference"]
     output:
         alignment = outdir+"/tmp/minimap2_match_chosen_aligned.fasta",
         #alignment = outdir+"/tmp/minimap2_match_chosen_{lineage,\D{1,3}?\.\d+\.\d+\.\d+}_aligned.fasta",
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     threads: 20
     shell:
         """
@@ -199,7 +213,7 @@ rule inital_tree:
     output:
         alignment = outdir+"/tmp/minimap2_match_chosen_aligned_veryfast.nwk",
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     threads: 20
     shell:
         """
@@ -220,7 +234,7 @@ rule resolve_tree:
     output:
         tree = outdir+"/tmp/minimap2_match_chosen_aligned_veryfast_resolved.nwk",
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     threads: 1
     shell:
         """
@@ -238,7 +252,7 @@ rule fix_brancges:
     output:
         tree = outdir+"/output/initialtree.nwk",
     conda:
-        "envs/raxml.yaml"
+        "../envs/raxml.yaml"
     params:
         prefix = outdir+"/tmp/minimap2_match_chosen_aligned_veryfast_resolved_fixed_raxml",
         output = outdir+"/tmp/minimap2_match_chosen_aligned_veryfast_resolved_fixed_raxml.raxml.bestTree"
@@ -269,7 +283,7 @@ rule get_time_tree:
         date_inference = "marginal",
         clock_filter_iqd = 4
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     shell:
         """
         augur refine \
@@ -293,7 +307,7 @@ rule get_outgroup:
         timetreeroot = outdir+"/tmp/timetree.root",
     shell:
         """
-        ./scripts/extract_outgroup_tree.jl -i {input} -o {output}
+        julia --project=scripts/julia_modules/JuliaClusterAndTreeTools ./scripts/extract_outgroup_tree.jl -i {input} -o {output}
         """
 
 
@@ -305,7 +319,7 @@ rule get_matching_original_tree:
     output:
         treeajusted = outdir+"/tmp/initialtreeTrimmed.nwk",
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     shell:
         """
         gotree prune -i {input.tree} -c {input.timetree} -o {output.treeajusted}
@@ -319,7 +333,7 @@ rule get_reroted_matching_original_tree:
     output:
         treeajusted = outdir+"/tmp/initialtreeTrimmedRooted.nwk",
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     shell:
         """
         gotree reroot outgroup -l {input.timetreeroot} -i {input.treeajusted} -o {output}
@@ -333,10 +347,10 @@ rule split_tree:
     params:
         maxn = config["maximum_amount_4_splits"],
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     shell:
         """
-        ./scripts/split_tree.jl -i {input} -o {output}
+        julia --project=scripts/julia_modules/JuliaClusterAndTreeTools ./scripts/split_tree.jl -m {params.maxn} -i {input} -o {output}
         """
 
 
@@ -349,9 +363,10 @@ rule get_clustering:
     params:
         wd = outdir+"/tmp/initialtreeTrimmedRooted_splits"
     conda:
-        "envs/phydelity.yaml"
+        "../envs/phydelity.yaml"
     shell:
         """
+        set +e
         wd=` pwd `
         cd {params.wd}
         for l in tree*.nwk ; do
@@ -363,21 +378,24 @@ rule get_clustering:
         for l in tree*.nwk ; do
             stem=${{l/\.nwk/""}} 
             clsf=cluster_phydelity_k2_sol0_"$stem".txt
+            touch $clsf
             cat $clsf | grep -v "CLUSTER" | sed "s/^/cl"$stem"_/g" >> $wd"/"{output}
         done
+        exit 0
         """
 
 rule get_focused_with_siblings:
     input:
         treeajusted = outdir+"/output/timetree.nwk",
-        lineage_seqs_sub_ids = outdir+"/tmp/lineage_sub.ids.txt",
+        lineage_seqs_sub_ids = rez_dir + "/lineages/mink/ids.txt",
+        #lineage_seqs_sub_ids = outdir+"/tmp/lineage_sub.ids.txt",
     output:
         treefocused = outdir+"/output/focused.nwk",
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     shell:
         """
-        ./scripts/focus_tree.jl -i {input.treeajusted} -l {input.lineage_seqs_sub_ids} -o {output} -s
+        julia --project=scripts/julia_modules/JuliaClusterAndTreeTools ./scripts/focus_tree.jl -i {input.treeajusted} -l {input.lineage_seqs_sub_ids} -o {output} -s
         """
 
 rule get_focused_wo_siblings:
@@ -387,7 +405,7 @@ rule get_focused_wo_siblings:
     output:
         treefocused = outdir+"/output/focused_wosiblings.nwk",
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     shell:
         """
         ./scripts/focus_tree.jl -i {input.treeajusted} -l {input.lineage_seqs_sub_ids} -o {output} 
@@ -409,7 +427,7 @@ rule traits:
         #columns = "region country",
         sampling_bias_correction = 3
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     shell:
         """
         augur traits \
@@ -429,10 +447,10 @@ rule collapse_tree:
         treefocusedcollapsed = outdir+"/output/focused_wosiblings_collapsed1.nwk",
         treefocusedcollapsed_data = outdir+"/output/focused_wosiblings_collapsed1.json",
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     shell:
         """
-        ./scripts/collapse_tree.jl -j {input.node_data} -i {input.treefocused} -o {output.treefocusedcollapsed} -d {output.treefocusedcollapsed_data} 
+        julia --project=scripts/julia_modules/JuliaClusterAndTreeTools ./scripts/collapse_tree.jl -j {input.node_data} -i {input.treefocused} -o {output.treefocusedcollapsed} -d {output.treefocusedcollapsed_data} 
         """
 
 rule collapse_tree2:
@@ -443,10 +461,10 @@ rule collapse_tree2:
         treefocusedcollapsed = outdir+"/output/focused_collapsed2.nwk",
         treefocusedcollapsed_data = outdir+"/output/focused_collapsed2.json", 
     conda:
-        "envs/analysis.yaml"
+        "../envs/analysis.yaml"
     shell:
         """
-        ./scripts/collapse_tree.jl -j {input.node_data} -i {input.treefocused} -o {output.treefocusedcollapsed} -d {output.treefocusedcollapsed_data} 
+       julia --project=scripts/julia_modules/JuliaClusterAndTreeTools  ./scripts/collapse_tree.jl -j {input.node_data} -i {input.treefocused} -o {output.treefocusedcollapsed} -d {output.treefocusedcollapsed_data} 
         """
 
 
@@ -458,7 +476,7 @@ rule collapse_tree2:
 #        fasta_ini = outdir+"/tmp/minimap2_match_chosen_ini_not_ordered.fa",
 #     threads: 80
 #     conda:
-#         "envs/analysis.yaml"
+#         "../envs/analysis.yaml"
 #     shell:
 #         "seqkit grep -n -j {threads} -f {input.ids} -o {output} -w 0 -i {input.fasta} "
 
@@ -470,7 +488,7 @@ rule collapse_tree2:
 #     output:
 #        fasta_final = outdir+"/tmp/minimap2_match_chosen.fasta",
 #     conda:
-#         "envs/analysis.yaml"
+#         "../envs/analysis.yaml"
 #     shell:
 #        "  rm -f {input.fasta_ini}.fai ; seqkit faidx {input.fasta_ini} --infile-list {input.ids} -w 0 -o {output} "
 
