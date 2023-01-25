@@ -2,9 +2,13 @@ work_dir: audines11
 sequences: /home/user1/run1/gisaid/sequences1010.fasta
 meta: /home/user1/run1/gisaid/metadata1010.tsv
 datasets_dir: datasets
-#lineages: "AY.4.5	Q.1	B.1.1.7	B.1.177.60	BA.2	BA.2.9"
-lineages: "BA.2 Q.1	B.1.1.7	AY.4.5"
+lineages: "AY.4.5	Q.1	B.1.1.7	B.1.177.60	BA.2	BA.2.9"
+#lineages: "BA.2 Q.1	B.1.1.7	AY.4.5"
 reference_id: 'MN908947 (Wuhan-Hu-1/2019)'
 reference_lineage: "BA.2"
 cleanup_keep_fraction_of_columns: 0.80
 cleanup_remove_proc_mostN_having: 20
+target_amount: 12000
+subset_amount_maximum: 30
+maximum_amount_4_splits: 2000
+reference: datasets/NC_045512.gb

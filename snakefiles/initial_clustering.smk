@@ -84,11 +84,8 @@ rule individual_filter:
     input:
         in_file_name = rez_dir + "/lineages/{id}/alignment_nextclade.fasta.gz",
     output:
-        output_file_name = rez_dir + "/lineages/{id}/alignment_nextclade_filtered_{k}_{t,\d+}.fasta.gz", 
-        output_file_nonconspoz_name = rez_dir + "/lineages/{id}/alignment_nextclade_filtere_nonconspoz_{k}_{t,\d+}.fasta.gz",
         rows_after_filter = rez_dir + "/lineages/{id}/alignment_nextclade_filtered_keptrows_{k}_{t}.txt", 
         columns_after_filter = rez_dir + "/lineages/{id}/alignment_nextclade_filtered_keptcolumns_{k}_{t}.txt", 
-        conservation_data =  rez_dir + "/lineages/{id}/alignment_nextclade_filtered_consData_{k}_{t}.csv", 
     params:
         keepPositionsFraction = "{k}",#0.8, # 0.7 0.8 0.9 0.95
         topNhaving_sequences_to_remove ="{t}", # 10, # 10 20 10 5 2
@@ -98,14 +95,11 @@ rule individual_filter:
     log: rez_dir + "/lineages/{id}/alignment_nextclade_filtered_parsed_{k}_{t}.ipynb"
     shell:
         """
-        papermill  scripts/julia_modules/JuliaClusterAndTreeTools/notebooks/test_aln.ipynb \
+        papermill  scripts/julia_modules/JuliaClusterAndTreeTools/notebooks/filter_aln.ipynb \
         {log} \
         -p in_file_name {input.in_file_name} \
-        -p  output_file_name {output.output_file_name} \
-        -p output_file_nonconspoz_name {output.output_file_nonconspoz_name} \
         -p rows_after_filter {output.rows_after_filter} \
         -p columns_after_filter {output.columns_after_filter} \
-        -p conservation_data {output.conservation_data} \
         -p keepPositionsFraction {params.keepPositionsFraction} \
         -p topNhaving_sequences_to_remove {params.topNhaving_sequences_to_remove} \
         -p reference_seq_id {params.reference_seq_id} \
@@ -258,7 +252,7 @@ rule get_subset_alignments:
     output:
         output_id = rez_dir + "/lineages/{id}/pair_id.fasta.gz",
         output_ref = rez_dir + "/lineages/{id}/pair_ref.fasta.gz"
-    threads: 16
+    threads: 1000
     log: rez_dir + "/lineages/{id}/pair_extract_names_columns_aln.ipynb"
     shell:
         """
@@ -386,10 +380,10 @@ rule test2:
 
 rule test3:
     input:
-        expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta",id=["Q.1","B.1.1.7"]),
+        #expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta",id=["Q.1","B.1.1.7"]),
         #expand(rez_dir + "/lineages/{id}/pair_ref_Gap2a_derep1_swarm.fasta",id=["Q.1","B.1.1.7"])
         #rez_dir + "/lineages/Q.1/pair_ref_derep_data.csv"
-        #rez_dir + "/pairwise_derep_results.csv" 
+        rez_dir + "/pairwise_derep_results.csv" 
 
 rule test4:
     input:
