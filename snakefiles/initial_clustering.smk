@@ -1,7 +1,12 @@
+import numpy as np
+import os
+import tqdm
+
 cleanup_keep_fraction_of_columns = str(config["cleanup_keep_fraction_of_columns"])
 cleanup_remove_proc_mostN_having = str(config["cleanup_remove_proc_mostN_having"])
 reference_lineage = config["reference_lineage"]
 lineages4summary = set(lineages) - set([config["reference_lineage"]])
+
 rule clusteringI:    
     input:
         #expand(rez_dir+ "/lineages/{id}/ids.txt",id=lineages)
@@ -126,6 +131,19 @@ rule remove_gaps:
             seqkit seq -w 0 -g  {input}  | gzip --stdout >  {output}
         """
 
+rule remove_size_info:
+    input:
+        "{stem}.fasta"
+    output:
+        "{stem}_woS.fasta"
+    threads: 12
+    conda: "../envs/clustering_tools.yaml"
+    shell:
+        """
+            vsearch --fastx_filter {input} --fastaout {output} --xsize
+            sed -i "s/'//g" {output}
+        """
+
 
 
 
@@ -142,21 +160,22 @@ rule rmident1:
         vsearch    --derep_fulllength   {input}    --sizeout   --fasta_width 0  --output {output[0]} --uc {output.uc}
         '''
 
-rule swarmF:
+
+rule swarmD2:
     input:
         "{stem}.fasta",
     output:
-        fa = "{stem}_swarmF.fasta",
-        uc = "{stem}_swarmF.fasta.swarminfo"
+        fa = "{stem}_swarmD2.fasta",
+        uc = "{stem}_swarmD2.fasta.swarminfo",
+        stru = "{stem}_swarmD2.fasta.internstr"
     params:
-        gap_opening_penalty = 100,
-        gap_extension_penalty = 100
     conda: "../envs/clustering_tools.yaml"
     threads: 1000
     shell:
         '''
-        swarm -f --threads {threads} -z   -w {output[0]} -r -o {output.uc} {input} -e {params.gap_extension_penalty} -g {params.gap_opening_penalty}
+        swarm  --threads {threads} -z  -d  2   -w {output[0]} -r -i {output.stru} -o {output.uc} {input}
         '''
+
 
 rule swarm:
     input:
@@ -171,6 +190,21 @@ rule swarm:
     shell:
         '''
         swarm -f --threads {threads} -z -d 1   -w {output[0]} -r -i {output.stru} -o {output.uc} {input}
+        '''
+
+rule swarmNF: #NF mean non fastidious
+    input:
+        "{stem}.fasta",
+    output:
+        fa = "{stem}_swarmNF.fasta", 
+        uc = "{stem}_swarmNF.fasta.swarminfo",
+        stru = "{stem}_swarmNF.fasta.internstr"
+    params:
+    conda: "../envs/clustering_tools.yaml"
+    threads: 1000
+    shell:
+        '''
+        swarm --threads {threads} -z -d 1   -w {output[0]} -r -i {output.stru} -o {output.uc} {input}
         '''
 
 # rule swarm:
@@ -322,7 +356,7 @@ rule amalyze_pair_derep:
 rule amalyze_common_derep:
     input:
         datas = expand(rez_dir + "/lineages/{id}/data.csv", id = lineages),
-        ids = expand(rez_dir + "/lineages/{id}/common_id_derep1.fasta.uc", id = lineages),
+        ids = expand(rez_dir + "/lineages/{id}/common_id_Gap2a_derep1.fasta.uc", id = lineages),
         setupmark = config["work_dir"]+"/RsetupDone.txt"
     log:
         notebook = rez_dir + "/lineages/common/common_ref_derep_data.r.ipynb"
@@ -332,6 +366,21 @@ rule amalyze_common_derep:
         "../envs/R_env.yaml"
     notebook:
         "../notebooks/analyse_derep_common.r.ipynb"
+
+rule amalyze_common_derep_swarm:
+    input:
+        datas = expand(rez_dir + "/lineages/{id}/data.csv", id = lineages),
+        ids = expand(rez_dir + "/lineages/{id}/common_id_Gap2a_derep1.fasta.uc", id = lineages),
+        ids2 = expand(rez_dir + "/lineages/{id}/common_id_Gap2a_derep1_swarm.fasta.internstr", id = lineages),
+        setupmark = config["work_dir"]+"/RsetupDone.txt"
+    log:
+        notebook = rez_dir + "/lineages/common/common_ref_derep_swarm_data.r.ipynb"
+    output:
+        ref = rez_dir + "/lineages/common/common_ref_derep_swarm_data.csv"
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "../notebooks/analyse_derep_swarm_common.r.ipynb"
 
 rule sumap_pair_derep:
     input:
@@ -368,7 +417,134 @@ rule split_swarm_clusters:
         print(output[0])
 
         
+# test simple evolution rate inference
 
+rule get_peak_ids:
+    input:
+        ids = rez_dir + "/lineages/{id}/common_id.txt",
+        data = rez_dir + "/lineages/{id}/data.csv",
+    output:
+        ids_focus = rez_dir + "/lineages/{id}/common_ids_peak_focus.txt",
+        ids_other = rez_dir + "/lineages/{id}/common_ids_peak_other.txt",
+    notebook:
+        "../notebooks/get_peak_ids.r.ipynb"
+    
+rule get_peak_ids_fasta_focus:
+    input:
+        ids = rez_dir + "/lineages/{id}/common_ids_peak_focus.txt",
+        fasta = rez_dir + "/lineages/{id}/common_id.fasta.gz"
+    output:
+        fasta = rez_dir + "/lineages/{id}/common_ids_peak_focus.fasta.gz",
+    shell:
+        """
+            seqkit grep -n -f {input.ids} {input.fasta} -o {output.fasta}
+        """
+
+rule print_common_ids:
+    input:
+        fasta = rez_dir + "/lineages/{id}/common_id.fasta.gz"
+    output:
+        ids = rez_dir + "/lineages/{id}/common_id.txt"
+    shell:
+        """
+            seqkit seq  -n -i  {input} -w 0 -o {output}
+        """
+
+rule decenttree:
+    input:
+        #rez_dir + "/lineages/{id}/common_id_Gap2a_derep1.fasta"
+        rez_dir + "/lineages/{id}/common_id_Gap2a_derep1_swarmNF_woS.fasta"
+    output:
+        rez_dir + "/lineages/{id}/common_id_decenttree.nwk"
+    threads: 36
+    shell:
+        """
+            external_programs/decenttree/bin/decenttree -nt {threads} \
+                -fasta {input} -max-dist 1000	-t NJ-R-V \
+                -out {output} -bar
+        """
+
+
+rule clustertree:
+    input:
+        tree = rez_dir + "/lineages/{id}/common_id_decenttree.nwk"
+    output:
+        cluster = rez_dir + "/lineages/{id}/clusters/{p,[!_]*}.tsv"
+    shell:
+        "TreeCluster.py  -i {input.tree} -t {wildcards.p} -m single_linkage_union -o {output} "
+
+
+
+
+rule clustertrees:
+    input:
+        [rez_dir + "/lineages/{id}/clusters/"+str(p)+".tsv" for p in np.linspace(0.0001, 0.0005, 1000)]
+    output:
+        cluster = rez_dir + "/lineages/{id}/clusters/generated.txt"
+    shell:
+        "touch {output}"
+
+
+rule merge_cluster4evaluatecluster:
+    input:
+        swarm = rez_dir + "/lineages/{id}/common_id_Gap2a_derep1_swarmNF.fasta.swarminfo",
+        darep = rez_dir + "/lineages/{id}/common_id_Gap2a_derep1.fasta.uc",
+    output:
+        merged = rez_dir + "/lineages/{id}/common_id_Gap2a_derep1_swarmNF_mergedclusters.csv",
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "../notebooks/join_clusters.r.ipynb"
+
+rule evaluatecluster:
+    input:
+        cluster = "audines11/rez/lineages/{id}/clusters/{p}.tsv",
+        data = rez_dir + "/lineages/{id}/data.csv",
+        merged = rez_dir + "/lineages/{id}/common_id_Gap2a_derep1_swarmNF_mergedclusters.csv",
+    output:
+        rez_dir + "/lineages/{id}/clusters/{p}_eval.tsv"
+    conda:
+        "../envs/R_env.yaml"
+    script:
+       "../notebooks/evaluate_cluster.r.R"
+    # notebook:
+    #     "../notebooks/evaluate_cluster.r.ipynb"
+
+rule merge_evaluations:
+    input:
+        [rez_dir + "/lineages/{id}/clusters/"+str(p)+"_eval.tsv" for p in np.linspace(0.0001, 0.0005, 1000)]
+    output:
+        rez_dir + "/lineages/{id}/clusters_evals.csv"
+    shell:
+        "cat {input} > {output}"
+
+
+rule choose_best_limit:
+    input:
+        rez_dir + "/lineages/{id}/clusters_evals.csv",
+    output:
+        rez_dir + "/lineages/{id}/clusters_evals_best.csv",
+    log:
+        notebook = rez_dir + "/lineages/{id}/clusters_evals_best.ipynb",
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "../notebooks/clusters_evals_best_choose.r.ipynb"
+
+
+
+rule tree_partition:
+    input:
+        expand(
+            rez_dir + "/lineages/{id}/clusters_evals.csv",
+            id = ["B.1.1.7"]
+         )
+        #[rez_dir + "/lineages/B.1.1.7/clusters/"+str(p)+"_eval.tsv" for p in np.linspace(0.0001, 0.0005, 1000)]
+        #"audines11/rez/lineages/B.1.1.7/clusters/0.00037667667667667666_eval.tsv"
+        # expand(
+        #     #rez_dir + "/lineages/{id}/common_id_decenttree.nwk", id = ["B.1.1.7"]
+        #     rez_dir + "/lineages/{id}/clusters/generated.txt", id = ["B.1.1.7"]
+        # )
 
 
 
@@ -391,5 +567,14 @@ rule test4:
         #output_id = expand(rez_dir + "/lineages/{id}/common_id.fasta.gz", id = ["Q.1"])
         #expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta.swarminfo",id=["B.1.1.7"])
 
+
+rule test5:
+    input:
+        #ref = rez_dir + "/lineages/common/common_ref_derep_data.csv"
+        #output_id = expand(rez_dir + "/lineages/{id}/common_id.fasta.gz", id = ["Q.1"])
+        #expand(rez_dir + "/lineages/{id}/common_id_Gap2a_derep1_swarm.fasta.internstr", id = lineages),
+        #ref = rez_dir + "/lineages/common/common_ref_derep_swarm_data.csv"
+        #expand(rez_dir + "/lineages/{id}/common_ids_peak.txt",id=lineages)
+        "audines11/rez/lineages/BA.2.9/common_ids_peak_focus_Gap2a_derep1_swarmD2.fasta.swarminfo"
 
 # expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta.swarminfo.cleaned_single.txt",id=["B.1.1.7"])

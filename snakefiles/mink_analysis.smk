@@ -2,19 +2,23 @@ outdir = config["work_dir"]+"/mink_phylogeny"
 #lineage = lineage.split()
 rule minks:
     input:
-        #data = rez_dir + "/lineages/mink/data.csv",
-        rez = rez_dir + "/initial_set_minimap2_match_all.sam",
-        ids = outdir+"/tmp/minimap2_match_chosen.ids",
-        alignment = outdir+"/tmp/minimap2_match_chosen_aligned.fasta",
-        initialtree = outdir+"/tmp/minimap2_match_chosen_aligned_veryfast.nwk",
-        tree = outdir+"/output/initialtree.nwk",
-        treeajusted = outdir+"/tmp/initialtreeTrimmedRooted.nwk",
-        treeajusted2 = outdir+"/tmp/initialtreeTrimmed.nwk",
-        clusters = outdir+"/output/clusters.txt",
+        #node_data = outdir+"/output/initialtree_withnodesnames.json",
+        #treefocused = outdir+"/output/initialtree_withnodesnames_rooted_focused.nwk",
+        #node_data = outdir+"/output/initialtree.json",
+        # #data = rez_dir + "/lineages/mink/data.csv",
+        # rez = rez_dir + "/initial_set_minimap2_match_all.sam",
+        # ids = outdir+"/tmp/minimap2_match_chosen.ids",
+        # alignment = outdir+"/tmp/minimap2_match_chosen_aligned.fasta",
+        # initialtree = outdir+"/tmp/minimap2_match_chosen_aligned_veryfast.nwk",
+        # tree = outdir+"/output/initialtree.nwk",
+        # treeajusted = outdir+"/tmp/initialtreeTrimmedRooted.nwk",
+        # treeajusted2 = outdir+"/tmp/initialtreeTrimmed.nwk",
+        # clusters = outdir+"/output/clusters.txt",
         treefocused = outdir+"/output/focused.nwk",
-        treefocusedcollapsed = outdir+"/output/focused_collapsed2.nwk",
-        #fasta = rez_dir+"/tmp/lineages_all_woN.fasta"
-        #fasta = rez_dir+"/tmp/lineages_all.id"
+        node_data = outdir + "/output/timetree_traits.json"
+        # treefocusedcollapsed = outdir+"/output/focused_collapsed2.nwk",
+        # #fasta = rez_dir+"/tmp/lineages_all_woN.fasta"
+        # #fasta = rez_dir+"/tmp/lineages_all.id"
 
 rule get_all_clean_ids:
     input:
@@ -281,7 +285,7 @@ rule get_time_tree:
     params:
         coalescent = "opt",
         date_inference = "marginal",
-        clock_filter_iqd = 4
+        clock_filter_iqd = 4 # switched off now
     conda:
         "../envs/analysis.yaml"
     shell:
@@ -296,7 +300,6 @@ rule get_time_tree:
             --coalescent {params.coalescent} \
             --date-confidence  --root best \
             --date-inference {params.date_inference} \
-            --clock-filter-iqd {params.clock_filter_iqd} \
         """
 
 
@@ -338,6 +341,28 @@ rule get_reroted_matching_original_tree:
         """
         gotree reroot outgroup -l {input.timetreeroot} -i {input.treeajusted} -o {output}
         """
+
+rule get_reroted_matching_original_treev2:
+    input:
+        tree = outdir+"/output/initialtree.nwk",
+        timetreeroot = outdir+"/tmp/timetree.root",
+    output:
+        treeajusted = outdir+"/output/initialtreeRooted.nwk",
+    conda:
+        "../envs/analysis.yaml"
+    shell:
+        """
+        gotree reroot outgroup -l {input.timetreeroot} -i {input.tree} -o {output}
+        """
+
+
+rule add_labels_4_internal_nodes:
+    input:
+        tree = outdir+"/output/initialtree.nwk",
+    output:
+        tree = outdir+"/output/initialtree_withnodesnames.nwk",
+    notebook:
+        "notebooks/add_labels.r.ipynb"
 
 rule split_tree:
     input:
@@ -438,6 +463,69 @@ rule traits:
             --confidence \
             --sampling-bias-correction {params.sampling_bias_correction}
         """
+
+
+
+rule traitsv2:
+    message:
+        """
+        Inferring ancestral traits for {params.columns!s}
+          - increase uncertainty of reconstruction by {params.sampling_bias_correction} to partially account for sampling bias
+        """
+    input:
+        tree = outdir+"/output/initialtree_withnodesnames.nwk",
+        metadata = config["meta"],
+    output:
+        node_data = outdir+"/output/initialtree_withnodesnames.json",
+    params:
+        columns = "country",
+        #columns = "region country",
+        sampling_bias_correction = 3
+    conda:
+        "../envs/analysis.yaml"
+    shell:
+        """
+        augur traits \
+            --tree {input.tree} \
+            --metadata {input.metadata} \
+            --output {output.node_data} \
+            --columns {params.columns} \
+            --confidence \
+            --sampling-bias-correction {params.sampling_bias_correction}
+        """
+
+rule rootmidpoint:
+    message:
+        """
+        rooting_midpoint
+        """
+    input:
+        tree = outdir+"/output/initialtree_withnodesnames.nwk",
+    output:
+        tree = outdir+"/output/initialtree_withnodesnames_rooted.nwk",
+    threads: 1
+    shell:
+        """
+        gotree reroot midpoint -i {input} -o {output}
+        """
+
+
+rule get_focused_with_siblingsfull:
+    input:
+        treeajusted = outdir+"/output/initialtree_withnodesnames_rooted.nwk",
+        lineage_seqs_sub_ids = rez_dir + "/lineages/mink/ids.txt",
+        #lineage_seqs_sub_ids = outdir+"/tmp/lineage_sub.ids.txt",
+    output:
+        treefocused = outdir+"/output/initialtree_withnodesnames_rooted_focused.nwk",
+    conda:
+        "../envs/analysis.yaml"
+    shell:
+        """
+        julia --project=scripts/julia_modules/JuliaClusterAndTreeTools ./scripts/focus_tree.jl -i {input.treeajusted} -l {input.lineage_seqs_sub_ids} -o {output} -s
+        """
+
+
+
 
 rule collapse_tree:
     input:

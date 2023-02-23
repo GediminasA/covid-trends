@@ -2,7 +2,7 @@ channels:
   - bioconda
   - conda-forge
 dependencies:
-  - r-vctrs=0.5.1
+  - r-vctrs
   - r-xfun=0.35
   - r-stringi=1.7.8
   - r-yaml=2.3.6
@@ -27,7 +27,6 @@ dependencies:
   - jupyterlab
   - r-irkernel
   - r-pacman
-  - r-vctrs=0.5.1
   - r-rematch2=2.1.2
   - r-diffobj=0.3.5
   - r-ps=1.7.2
@@ -38,3 +37,13 @@ dependencies:
   - r-brio=1.1.3
   - r-testthat=3.1.5
   - r-tidyverse
+  - r-ggpubr
+  - r-fitdistrplus
+  - r-lattice
+  - r-lmtest
+  - r-pscl
+  - r-emmeans
+  - r-multcompView
+  - r-multcomp
+  - r-devtools
+  - r-ggnewscale
