@@ -469,20 +469,34 @@ rule clustertree:
     input:
         tree = rez_dir + "/lineages/{id}/common_id_decenttree.nwk"
     output:
-        cluster = rez_dir + "/lineages/{id}/clusters/{p,[!_]*}.tsv"
+        cluster = rez_dir + "/lineages/{id}/clusters/{p}_ini.tsv",
     shell:
-        "TreeCluster.py  -i {input.tree} -t {wildcards.p} -m single_linkage_union -o {output} "
+        "TreeCluster.py  -i {input.tree} -t {wildcards.p} -m length_clade  -o {output} "
+        #"TreeCluster.py  -i {input.tree} -t {wildcards.p} -m single_linkage_union -o {output} "
 
+#single_linkage 1
+#single_linkage_cut 1
+#single_linkage_union 1
+#sum_branch 0
+#sum_branch_clade 0
+#med_clade 1
+#root_dist 1
+#avg_clade 1
+#leaf_dist_max 1
+#length 1
+#length_clade 2
+#max 1
 
+#avg_clade, leaf_dist_avg, leaf_dist_max, leaf_dist_min, length, length_clade, max, max_clade,
+#med_clade, root_dist, single_linkage, single_linkage_cut, single_linkage_union, sum_branch, sum_branch_clade
 
-
-rule clustertrees:
-    input:
-        [rez_dir + "/lineages/{id}/clusters/"+str(p)+".tsv" for p in np.linspace(0.0001, 0.0005, 1000)]
-    output:
-        cluster = rez_dir + "/lineages/{id}/clusters/generated.txt"
-    shell:
-        "touch {output}"
+# rule clustertrees:
+#     input:
+#         [rez_dir + "/lineages/{id}/clusters/"+str(p)+".tsv" for p in np.linspace(0.0001, 0.0005, 1000)]
+#     output:
+#         cluster = rez_dir + "/lineages/{id}/clusters/generated.txt"
+#     shell:
+#         "touch {output}"
 
 
 rule merge_cluster4evaluatecluster:
@@ -498,7 +512,7 @@ rule merge_cluster4evaluatecluster:
 
 rule evaluatecluster:
     input:
-        cluster = "audines11/rez/lineages/{id}/clusters/{p}.tsv",
+        cluster = rez_dir + "/lineages/{id}/clusters/{p}_ini.tsv",
         data = rez_dir + "/lineages/{id}/data.csv",
         merged = rez_dir + "/lineages/{id}/common_id_Gap2a_derep1_swarmNF_mergedclusters.csv",
     output:
@@ -512,18 +526,23 @@ rule evaluatecluster:
 
 rule merge_evaluations:
     input:
-        [rez_dir + "/lineages/{id}/clusters/"+str(p)+"_eval.tsv" for p in np.linspace(0.0001, 0.0005, 1000)]
+        [rez_dir + "/lineages/{id}/clusters/"+str(p)+"_eval.tsv" for p in np.arange(0.00001, 0.0005, 0.00001)]
     output:
         rez_dir + "/lineages/{id}/clusters_evals.csv"
     shell:
         "cat {input} > {output}"
 
 
-rule choose_best_limit:
+checkpoint choose_best_limit:
     input:
-        rez_dir + "/lineages/{id}/clusters_evals.csv",
+        evals = rez_dir + "/lineages/{id}/clusters_evals.csv",
+        data = rez_dir + "/lineages/{id}/data.csv",
+        merged = rez_dir + "/lineages/{id}/common_id_Gap2a_derep1_swarmNF_mergedclusters.csv",
     output:
-        rez_dir + "/lineages/{id}/clusters_evals_best.csv",
+        clusters = directory(rez_dir + "/lineages/{id}/clusters4trees"), 
+    params:
+        clusters = rez_dir + "/lineages/{id}/clusters/",
+        max_number_of_cluster_to_write = 100000000000000
     log:
         notebook = rez_dir + "/lineages/{id}/clusters_evals_best.ipynb",
     conda:
@@ -531,13 +550,121 @@ rule choose_best_limit:
     notebook:
         "../notebooks/clusters_evals_best_choose.r.ipynb"
 
+def aggregate_input(wildcards):
+    #checkpoint_output = checkpoints.choose_best_limit.get(**wildcards).output[1]
+    checkpoint_output = checkpoints.choose_best_limit.get(**wildcards).output[0]
+    clsid = glob_wildcards(os.path.join(checkpoint_output, "cl{i}")).i
+    #out = expand(rez_dir + "/lineages/"+wildcards.id+"/clusters4trees_analysis/cl{i}.fasta",i=clsid)
+    #out = expand(rez_dir + "/lineages/"+wildcards.id+"/clusters4trees_analysis/cl{i}_veryfasttree_resolved.nw",i=clsid)
+    out = expand(rez_dir + "/lineages/"+wildcards.id+"/clusters4trees_analysis/cl{i}_timetree.nw",i=clsid)
+    #import sys 
+    #sys.exit()
+    return(out)
+
+rule get_cluster_fasta:
+    input:
+        fasta = rez_dir + "/lineages/{id}/alignment_nextclade.fasta.gz",
+        ids = rez_dir + "/lineages/{id}/clusters4trees/cl{i}"
+    output:
+        rez_dir + "/lineages/{id}/clusters4trees_analysis/cl{i}.fasta"
+    shell:
+        """
+            seqkit grep -w 0 -n -f {input.ids} {input.fasta} -o {output}
+        """
+
+rule get_cluster_tree1:
+    input:
+        rez_dir + "/lineages/{id}/clusters4trees_analysis/cl{i}.fasta"
+    output:
+        rez_dir + "/lineages/{id}/clusters4trees_analysis/cl{i}_veryfasttree.nw"
+    conda:
+        "../envs/analysis.yaml"
+    threads: 16
+    shell:
+        """
+        cat {input} |  VeryFastTree -nosupport  -gamma -nt -gtr -out {output}  -double-precision  -threads {threads}
+      """
+
+rule get_cluster_resolved_tree:
+    message:
+        """
+        Resolving multifurcatings
+        """
+    input:
+        tree = rez_dir + "/lineages/{id}/clusters4trees_analysis/cl{i}_veryfasttree.nw"
+    output:
+        tree = rez_dir + "/lineages/{id}/clusters4trees_analysis/cl{i}_veryfasttree_resolved.nw"
+    conda:
+        "../envs/analysis.yaml"
+    threads: 1
+    shell:
+        """
+        gotree resolve -i {input} -o {output}
+        """
+
+rule reformatdata:
+    input:
+        metadata = rez_dir + "/lineages/{id}/data.csv"
+    output:
+        metadata = rez_dir + "/lineages/{id}/data4timetree.csv"
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "notebooks/preparedata4timetree.r.ipynb"
+    
+
+rule get_cluster_time_tree:
+    """
+    Refining tree
+        - estimate timetree
+        - use {params.coalescent} coalescent timescale
+        - estimate {params.date_inference} node dates
+        - filter tips more than {params.clock_filter_iqd} IQDs from clock expectation
+    """
+    input:
+        tree = rez_dir + "/lineages/{id}/clusters4trees_analysis/cl{i}_veryfasttree_resolved.nw",
+        alignment = rez_dir + "/lineages/{id}/clusters4trees_analysis/cl{i}.fasta",
+        metadata = rez_dir + "/lineages/{id}/data4timetree.csv"
+    output:
+        tree = rez_dir + "/lineages/{id}/clusters4trees_analysis/cl{i}_timetree.nw",
+        node_data = rez_dir + "/lineages/{id}/clusters4trees_analysis/cl{i}_timetree_branch_lengths.json"
+    params:
+        coalescent = "opt",
+        date_inference = "marginal",
+        clock_filter_iqd = 4 # switched off now
+    conda:
+        "../envs/analysis.yaml"
+    shell:
+        """
+        augur refine \
+            --tree {input.tree} \
+            --alignment {input.alignment} \
+            --metadata {input.metadata} \
+            --output-tree {output.tree} \
+            --output-node-data {output.node_data} \
+            --timetree \
+            --coalescent {params.coalescent} \
+            --date-confidence  --root best \
+            --date-inference {params.date_inference} \
+            --clock-filter-iqd {params.clock_filter_iqd}
+        """
+
+rule aggregate:
+    input:
+        aggregate_input
+    output:
+        "aggregated_{id}.txt"
+    run:
+        print("Output")
+        print(input)
 
 
 rule tree_partition:
     input:
         expand(
-            rez_dir + "/lineages/{id}/clusters_evals.csv",
-            id = ["B.1.1.7"]
+            "aggregated_{id}.txt",
+            #rez_dir + "/lineages/{id}/clusters_evals.csv",
+            id = lineages  #["B.1.1.7"]
          )
         #[rez_dir + "/lineages/B.1.1.7/clusters/"+str(p)+"_eval.tsv" for p in np.linspace(0.0001, 0.0005, 1000)]
         #"audines11/rez/lineages/B.1.1.7/clusters/0.00037667667667667666_eval.tsv"
