@@ -428,7 +428,19 @@ rule get_peak_ids:
         ids_other = rez_dir + "/lineages/{id}/common_ids_peak_other.txt",
     notebook:
         "../notebooks/get_peak_ids.r.ipynb"
-    
+
+rule analyse_peaks:
+    input:
+        swarm = rez_dir + "/lineages/{id}/common_ids_peak_focus_Gap2a_derep1_swarm.fasta.swarminfo",
+        uc = rez_dir + "/lineages/{id}/common_ids_peak_focus_Gap2a_derep1.fasta.uc"
+    output:
+        rez = rez_dir + "/lineages/{id}/common_ids_peak_focus_Gap2a_derep1_swarm.data.txt"
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "../notebooks/peak_cluster_analysis.r.ipynb"
+
+
 rule get_peak_ids_fasta_focus:
     input:
         ids = rez_dir + "/lineages/{id}/common_ids_peak_focus.txt",
@@ -542,7 +554,7 @@ checkpoint choose_best_limit:
         clusters = directory(rez_dir + "/lineages/{id}/clusters4trees"), 
     params:
         clusters = rez_dir + "/lineages/{id}/clusters/",
-        max_number_of_cluster_to_write = 100000000000000
+        max_number_of_cluster_to_write = 10
     log:
         notebook = rez_dir + "/lineages/{id}/clusters_evals_best.ipynb",
     conda:
@@ -556,7 +568,8 @@ def aggregate_input(wildcards):
     clsid = glob_wildcards(os.path.join(checkpoint_output, "cl{i}")).i
     #out = expand(rez_dir + "/lineages/"+wildcards.id+"/clusters4trees_analysis/cl{i}.fasta",i=clsid)
     #out = expand(rez_dir + "/lineages/"+wildcards.id+"/clusters4trees_analysis/cl{i}_veryfasttree_resolved.nw",i=clsid)
-    out = expand(rez_dir + "/lineages/"+wildcards.id+"/clusters4trees_analysis/cl{i}_timetree.nw",i=clsid)
+    #out = expand(rez_dir + "/lineages/"+wildcards.id+"/clusters4trees_analysis/cl{i}_timetree.nw",i=clsid)
+    out = expand(rez_dir + "/lineages/"+wildcards.id+"/clusters4trees_analysis/cl{i}_timetree_branch_lengths_er.txt",i=clsid)
     #import sys 
     #sys.exit()
     return(out)
@@ -579,7 +592,7 @@ rule get_cluster_tree1:
         rez_dir + "/lineages/{id}/clusters4trees_analysis/cl{i}_veryfasttree.nw"
     conda:
         "../envs/analysis.yaml"
-    threads: 16
+    threads: 32
     shell:
         """
         cat {input} |  VeryFastTree -nosupport  -gamma -nt -gtr -out {output}  -double-precision  -threads {threads}
@@ -649,29 +662,40 @@ rule get_cluster_time_tree:
             --clock-filter-iqd {params.clock_filter_iqd}
         """
 
+rule extract_erate:
+    input:
+        rez_dir + "/lineages/{id}/clusters4trees_analysis/cl{i}_timetree_branch_lengths.json"
+    output:
+        rez_dir + "/lineages/{id}/clusters4trees_analysis/cl{i}_timetree_branch_lengths_er.txt"
+    notebook:
+        "../notebooks/extract_erate_from_json.py.ipynb" 
+
+
 rule aggregate:
     input:
         aggregate_input
     output:
-        "aggregated_{id}.txt"
-    run:
-        print("Output")
-        print(input)
+        rez_dir + "/lineages/{id}/clusters4trees_analysis/merged_timetree_branch_lengths_er.txt"
+    shell:
+        """
+            touch {output}
+            cat {input} > {output}
+        """
 
 
-rule tree_partition:
+rule evaluate_tree_partition:
     input:
         expand(
-            "aggregated_{id}.txt",
+            rez_dir + "/lineages/{id}/clusters4trees_analysis/merged_timetree_branch_lengths_er.txt",
             #rez_dir + "/lineages/{id}/clusters_evals.csv",
             id = lineages  #["B.1.1.7"]
          )
-        #[rez_dir + "/lineages/B.1.1.7/clusters/"+str(p)+"_eval.tsv" for p in np.linspace(0.0001, 0.0005, 1000)]
-        #"audines11/rez/lineages/B.1.1.7/clusters/0.00037667667667667666_eval.tsv"
-        # expand(
-        #     #rez_dir + "/lineages/{id}/common_id_decenttree.nwk", id = ["B.1.1.7"]
-        #     rez_dir + "/lineages/{id}/clusters/generated.txt", id = ["B.1.1.7"]
-        # )
+    output:
+            rez_dir + "/lineages/clusters4trees_evolution_rate.csv",
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "notebooks/analyse_clusteredtreeER.r.ipynb"
 
 
 
@@ -702,6 +726,10 @@ rule test5:
         #expand(rez_dir + "/lineages/{id}/common_id_Gap2a_derep1_swarm.fasta.internstr", id = lineages),
         #ref = rez_dir + "/lineages/common/common_ref_derep_swarm_data.csv"
         #expand(rez_dir + "/lineages/{id}/common_ids_peak.txt",id=lineages)
-        "audines11/rez/lineages/BA.2.9/common_ids_peak_focus_Gap2a_derep1_swarmD2.fasta.swarminfo"
+        # "audines11/rez/lineages/BA.2.9/common_ids_peak_focus_Gap2a_derep1_swarm.data.txt"
+        expand(rez_dir + "/lineages/{id}/common_ids_peak_focus_Gap2a_derep1_swarm.data.txt", id = lineages)
 
+rule test6:
+    input:
+        rez_dir + "/lineages/clusters4trees_evolution_rate.csv",
 # expand(rez_dir + "/lineages/{id}/pair_id_Gap2a_derep1_swarm.fasta.swarminfo.cleaned_single.txt",id=["B.1.1.7"])
