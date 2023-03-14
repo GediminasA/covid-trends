@@ -54,7 +54,8 @@ rule subs2:
 
 rule get_periodic_cluster_fasta:
     input:
-        fasta = rez_dir + "/lineages/{id}/alignment_nextclade.fasta.gz",
+        #fasta = rez_dir + "/lineages/{id}/alignment_nextclade.fasta.gz",
+        fasta = rez_dir + "/lineages/{id}/common_id.fasta.gz",
         ids = rez_dir + "/lineages/{id}/periodic_partitions/cl{i}"
     output:
         rez_dir + "/lineages/{id}/periodic_partitions_analysis/cl{i, [^\_]+}.fasta"
@@ -164,7 +165,7 @@ rule merge_data:
         expand(
             #rez_dir + "/lineages/{id}/periodic_partitions_F{perc}_S{seed}_data.tsv",
             rez_dir + "/lineages/{id}/periodic_partitions_analysis/clN{numb}S{seed}_timetree_branch_lengths_er.txt",
-            numb = [2000],
+            numb = [2000,1000,500],
             seed = [2,1,3,4,5],
             id = lineages)
     output:
