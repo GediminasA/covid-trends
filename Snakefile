@@ -9,6 +9,7 @@ include: "snakefiles/initial_clustering.smk"
 include: "snakefiles/s_protein_analysis.smk"
 include: "snakefiles/mink_analysis.smk"
 include: "snakefiles/downasmpling4timetree.smk"
+include: "snakefiles/downasmpling4timetree_clustered.smk"
 rule setup_R:
     output:
         config["work_dir"]+"/RsetupDone.txt"

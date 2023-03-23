@@ -145,7 +145,29 @@ rule remove_size_info:
         """
 
 
+rule remove_singlets_and_size_info:
+    input:
+        "{stem}.fasta"
+    output:
+        "{stem}_woSI.fasta"
+    threads: 12
+    conda: "../envs/clustering_tools.yaml"
+    shell:
+        """
+            vsearch --fastx_filter {input} --fastaout {output}  --minsize 2 --xsize
+            sed -i "s/'//g" {output}
+        """
 
+rule get_fasta_IDs:
+    input:
+        "{stem}.fasta"
+    output:
+        "{stem}.fasta.IDs"
+    shell:
+        """
+            seqkit seq -n -i {input} -o {output}
+        """
+    
 
 rule rmident1:
     input:
@@ -328,6 +350,8 @@ rule replace_gaps:
         "{stem}_Gap2a.fasta.gz"
     log:
         "{stem}_Gap2a.log"
+    threads:
+        4
     shell:
         """
         papermill scripts/julia_modules/JuliaClusterAndTreeTools/notebooks/replace_gaps.ipynb \

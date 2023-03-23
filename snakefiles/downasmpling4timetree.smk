@@ -42,11 +42,40 @@ rule subs1:
             id = lineages)
 
 
+rule get_periodic_cluster_chronumental_tree:
+    input:
+        tree = rez_dir + "/lineages/{id}/periodic_partitions_analysis/clN{numb}S{seed}_veryfasttree_resolved.nw",
+        metadata = rez_dir + "/lineages/{id}/data4timetree.csv"
+    output:
+        tree = rez_dir + "/lineages/{id}/periodic_partitions_analysis/clN{numb}S{seed}_chronumental.nw",
+        node_data = rez_dir + "/lineages/{id}/periodic_partitions_analysis/clN{numb}S{seed}_chronumental_data.csv",
+        calc_data = rez_dir + "/lineages/{id}/periodic_partitions_analysis/clN{numb}S{seed}_chronumental_data.txt",
+    shell:
+        """
+        chronumental \
+            --tree {input.tree} \
+            --dates {input.metadata} \
+            --tree_out {output.tree} \
+            --dates_out {output.node_data} \
+            --treat_mutation_units_as_normalised_to_genome_size 1 \
+            --steps 10000 > {output.calc_data}
+        """
+rule parse_chronumentas_out_per_seed:
+    input:
+        calc_data = rez_dir + "/lineages/{id}/periodic_partitions_analysis/clN{numb}S{seed}_chronumental_data.txt",
+    output:
+        calc_data = rez_dir + "/lineages/{id}/periodic_partitions_analysis/clN{numb}S{seed}_chronumental_data_parsed.txt",
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "../notebooks/parse_chronumental_per_seed.r.ipynb"
+        ""
 rule subs2:
     input:
         expand(
             #rez_dir + "/lineages/{id}/periodic_partitions_F{perc}_S{seed}_data.tsv",
-            rez_dir + "/lineages/{id}/periodic_partitions_analysis/clN{numb}S{seed}_timetree_branch_lengths_er.txt",
+            #rez_dir + "/lineages/{id}/periodic_partitions_analysis/clN{numb}S{seed}_timetree_branch_lengths_er.txt",
+            rez_dir + "/lineages/{id}/periodic_partitions_analysis/clN{numb}S{seed}_chronumental_data.txt",
             numb = [2000],
             seed = [2,1,3,4,5],
             id = lineages)
