@@ -1,3 +1,0 @@
-[submodule "scripts/julia_modules/JuliaClusterAndTreeTools"]
-	path = scripts/julia_modules/JuliaClusterAndTreeTools
-	url = git@github.com:GediminasA/JuliaClusterAndTreeTools.git

@@ -91,8 +91,8 @@ rule run_pangolin:
     input:
         fasta = config["sequences"]
     output:
-        alignment = rez_dir+"/alignment_minimap.fasta",
-        report = rez_dir+"/pangolin_lineage_report.csv"
+        alignment = protected(rez_dir+"/alignment_minimap.fasta"),
+        report = protected(rez_dir+"/pangolin_lineage_report.csv")
     params:
         out_dir = rez_dir,    
         tmp_dir = tmp_dir + "/pangolin_analysis", 
@@ -103,10 +103,10 @@ rule run_pangolin:
     threads: 80
     shell:
         """
-            mkdir -p {params.tmp_dir}
+            pangolin --add-assignment-cache
+	    mkdir -p {params.tmp_dir}
             pangolin --use-assignment-cache -t {threads} --outfile {params.report} --outdir {params.out_dir}  --tempdir {params.tmp_dir}   --alignment-file {params.alignment}  --analysis-mode fast  --alignment {input.fasta}
         """ 
-
 
 rule download_covid_dataset:
     output:
@@ -121,9 +121,9 @@ rule run_nextclade:
         fasta = config["sequences"],
         data = config["datasets_dir"]+"/sars-cov-2"
     output:
-        alignment = rez_dir+"/alignment_nextclasde.fasta.gz",
-        report = rez_dir+"/nextclade_report.csv",
-        S_alignment = rez_dir+"/gene_S.translation.fasta.gz" 
+        alignment = protected(rez_dir+"/alignment_nextclasde.fasta.gz"),
+        report = protected(rez_dir+"/nextclade_report.csv"),
+        S_alignment = protected(rez_dir+"/gene_S.translation.fasta.gz") 
     log:
         "logs/nextclade.log"
     conda:

@@ -32,6 +32,8 @@ rule get_ids:
     params:
         id = "{id}"
     threads: 12
+    conda:
+        "../envs/R_env.yaml"
     notebook:
         "notebooks/filter_out_lioneage.r.ipynb"
 
@@ -57,6 +59,8 @@ rule extract_alignment:
     output:
         aln = rez_dir + "/lineages/{id}/alignment_nextclade.fasta.gz",
     threads: 12
+    conda: 
+        "../envs/clustering_tools.yaml"
     shell:
         """
             
@@ -72,6 +76,8 @@ rule extract_reference_sequence:
     params:
         id = config["reference_id"]
     threads: 12
+    conda: 
+        "../envs/clustering_tools.yaml"
     shell:
         "seqkit grep -w 0 -n -p '{params.id}' {input.alignment} -o {output.ref}  "
 
@@ -81,6 +87,8 @@ rule clean_name_4_reference_sequence:
         ref = rez_dir + "/lineages/alignment_nextclade_refseq.fasta.gz",
     output:
         refclean = rez_dir + "/lineages/alignment_nextclade_refseq_shortid.fasta.gz",
+    conda: 
+        "../envs/clustering_tools.yaml"
     shell:
         "seqkit seq -w 0 -i {input} -o {output}  "
 
@@ -126,6 +134,8 @@ rule remove_gaps:
     output:
         "{stem}_woG.fasta.gz"
     threads: 12
+    conda: 
+        "../envs/clustering_tools.yaml"
     shell:
         """
             seqkit seq -w 0 -g  {input}  | gzip --stdout >  {output}
@@ -163,6 +173,8 @@ rule get_fasta_IDs:
         "{stem}.fasta"
     output:
         "{stem}.fasta.IDs"
+    conda: 
+        "../envs/clustering_tools.yaml"
     shell:
         """
             seqkit seq -n -i {input} -o {output}
@@ -264,6 +276,8 @@ rule extract_alignment_derep:
     output:
         aln = rez_dir + "/lineages/{id}/alignment_nextclade_derep.fasta.gz",
     threads: 12
+    conda: 
+        "../envs/clustering_tools.yaml"
     shell:
         "seqkit grep -w 0 -n -f {input.ids} {input.alignment} -o {output.aln}  "
 
@@ -471,6 +485,8 @@ rule get_peak_ids_fasta_focus:
         fasta = rez_dir + "/lineages/{id}/common_id.fasta.gz"
     output:
         fasta = rez_dir + "/lineages/{id}/common_ids_peak_focus.fasta.gz",
+    conda: 
+        "../envs/clustering_tools.yaml"
     shell:
         """
             seqkit grep -n -f {input.ids} {input.fasta} -o {output.fasta}
@@ -481,6 +497,8 @@ rule print_common_ids:
         fasta = rez_dir + "/lineages/{id}/common_id.fasta.gz"
     output:
         ids = rez_dir + "/lineages/{id}/common_id.txt"
+    conda: 
+        "../envs/clustering_tools.yaml"
     shell:
         """
             seqkit seq  -n -i  {input} -w 0 -o {output}
@@ -604,6 +622,8 @@ rule get_cluster_fasta:
         ids = rez_dir + "/lineages/{id}/clusters4trees/cl{i}"
     output:
         rez_dir + "/lineages/{id}/clusters4trees_analysis/cl{i}.fasta"
+    conda: 
+        "../envs/clustering_tools.yaml"
     shell:
         """
             seqkit grep -w 0 -n -f {input.ids} {input.fasta} -o {output}

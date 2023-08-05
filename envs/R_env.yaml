@@ -24,6 +24,7 @@ dependencies:
   - r-dtplyr
   - r-patchwork
   - r-lubridate
+  - jupyter
   - jupyterlab
   - r-irkernel
   - r-pacman

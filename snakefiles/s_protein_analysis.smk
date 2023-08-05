@@ -11,6 +11,8 @@ rule extract_reference_sequence_s_protein:
     params:
         id = config["reference_id"]
     threads: 12
+    conda: 
+        "../envs/clustering_tools.yaml"
     shell:
         "seqkit grep -w 0 -n -p '{params.id}' {input.alignment} -o {output.ref}  "
 
@@ -22,6 +24,8 @@ rule extract_alignment_s_protein:
     output:
         aln = rez_dir + "/lineages/{id}/sprotein/all_sequences.fasta.gz",
     threads: 12
+    conda: 
+        "../envs/clustering_tools.yaml"
     shell:
         """  
             seqkit grep -w 0 -n -f {input.ids} {input.alignment} -o {output.aln}
@@ -35,6 +39,8 @@ rule extract_alignment_s_protein_lt:
     output:
         aln = rez_dir + "/lineages/{id}/sprotein/lt_sequences.fasta.gz",
     threads: 12
+    conda: 
+        "../envs/clustering_tools.yaml"
     shell:
         """  
             seqkit grep -w 0 -n -f {input.ids} {input.alignment} -o {output.aln}
