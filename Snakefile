@@ -4,12 +4,13 @@ lineages = config["lineages"].split()
 reference_lineage = config["reference_lineage"]
 juliaenv = "scripts/julia_modules/JuliaClusterAndTreeTools"
 
-#initial clustering 
 include: "snakefiles/initial_clustering.smk"
 include: "snakefiles/s_protein_analysis.smk"
 include: "snakefiles/mink_analysis.smk"
 include: "snakefiles/downasmpling4timetree.smk"
 include: "snakefiles/downasmpling4timetree_clustered.smk"
+include: "snakefiles/summarising_analyses.smk"
+
 rule setup_R:
     output:
         config["work_dir"]+"/RsetupDone.txt"
@@ -17,6 +18,25 @@ rule setup_R:
         "envs/R_env.yaml"
     notebook:
         "notebooks/setupR.r.ipynb"
+
+rule setup_julia_environment:
+    output:
+        config["work_dir"]+"/JuliasetupDone.txt"
+    params:
+        julia_project_location = "scripts/julia_modules/JuliaClusterAndTreeTools/"
+    shell:
+        """
+            cwd=`pwd`
+            cd {params.julia_project_location}
+            julia -e 'using Pkg; Pkg.instantiate()'
+            julia -e 'using Pkg; Pkg.add("IJulia")'
+            julia -e 'using Pkg; Pkg.add("Revise")'
+            julia --project=. -e 'using Pkg; Pkg.instantiate()'
+            julia --project=. -e 'using Pkg; Pkg.precompile()'
+            julia --project=. -e 'using Pkg; Pkg.build()'
+            cd $cwd
+            touch analysis_large/JuliasetupDone.txt
+        """
 
 rule target:
     input:

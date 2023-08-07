@@ -93,8 +93,11 @@ rule clean_name_4_reference_sequence:
         "seqkit seq -w 0 -i {input} -o {output}  "
 
 # run filter indudually leaving only sequences without Ns
+
+
 rule individual_filter:
     input:
+        config["work_dir"]+"/JuliasetupDone.txt",
         in_file_name = rez_dir + "/lineages/{id}/alignment_nextclade.fasta.gz",
     output:
         rows_after_filter = rez_dir + "/lineages/{id}/alignment_nextclade_filtered_keptrows_{k}_{t}.txt", 
