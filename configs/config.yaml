@@ -2,7 +2,8 @@ work_dir: analysis_large
 sequences: /data/analyses/gisaid/sequences.fasta #/home/user1/run1/gisaid/sequences1010.fasta
 meta: /data/analyses/gisaid/metadata.csv
 datasets_dir: datasets
-lineages: "AY.4.5	Q.1	B.1.1.7	B.1.177.60	BA.2	BA.2.9"
+lineages: "B.1 B.1.1 D.2 B.1.2 B.1.177 B.1.1.7 AY.4 B.1.617.2 AY.43 BA.1.1 BA.2 BA.2.12.1 BA.5.2.1 BA.5.2 BQ.1.1 AY.4.5 Q.1 B.1.177.60 BA.2.9" # most abundant each quarter worldwide more than  1000
+#lineages: "AY.4.5	Q.1	B.1.1.7	B.1.177.60	BA.2	BA.2.9" - LT most abundant
 #lineages: "BA.2 Q.1	B.1.1.7	AY.4.5"
 reference_id: 'MN908947 (Wuhan-Hu-1/2019)'
 reference_lineage: "BA.2"

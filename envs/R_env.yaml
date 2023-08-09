@@ -52,3 +52,4 @@ dependencies:
   - r-ggalt
   - r-viridis
   - r-ggh4x
+  - r-svglite

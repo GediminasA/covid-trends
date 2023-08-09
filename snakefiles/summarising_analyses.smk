@@ -3,7 +3,9 @@ rule time_trend_of_stability:
         stabilities_common = rez_dir + "/lineages/common/common_ref_derep_data.csv",
         stabilities_pairwise = rez_dir + "/pairwise_derep_results.csv",
         pangolin = rez_dir+"/pangolin_lineage_report.csv",
-        meta = config["meta"]
+        meta = config["meta"],
+        most_abundad_lt = rez_dir + "/most_abundand_lineages_lt.csv",
+        abundance_dates_per_lineage = rez_dir + "/abundance_dates_per_lineage.csv", 
     log:
         notebook = rez_dir + "/time_trend_of_stability.ipynb"
     output:
@@ -20,7 +22,9 @@ rule most_abundand_lineages:
     log:
         notebook = rez_dir + "/most_abundand_lineages.ipynb"
     output:
-        stabilities_pairwise = rez_dir + "/most_abundand_lineages.csv"
+        quarterly_most_abundand = rez_dir + "/most_abundand_lineages_quartlely_worldwide.csv",
+        most_abundad_lt = rez_dir + "/most_abundand_lineages_lt.csv",
+        abundance_dates_per_lineage = rez_dir + "/abundance_dates_per_lineage.csv", 
     conda:
         "../envs/R_env.yaml"
     notebook:
