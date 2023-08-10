@@ -9,7 +9,10 @@ rule time_trend_of_stability:
     log:
         notebook = rez_dir + "/time_trend_of_stability.ipynb"
     output:
-        stabilities_pairwise = rez_dir + "/time_trend_of_stability.csv"
+        time_trend_of_stability_data = rez_dir + "/time_trend_of_stability.csv",
+        estimates_of_stability_data = rez_dir + "/estimates_of_stability.csv",
+        time_trend_of_stability_image = rez_dir + "/time_trend_of_stability.svg",
+        estimates_of_stability_image = rez_dir + "/estimates_of_stability.svg"
     conda:
         "../envs/R_env.yaml"
     notebook:
