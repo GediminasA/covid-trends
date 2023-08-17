@@ -53,3 +53,4 @@ dependencies:
   - r-viridis
   - r-ggh4x
   - r-svglite
+  - bioconductor-fgsea
