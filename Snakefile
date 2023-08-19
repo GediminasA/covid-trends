@@ -20,23 +20,47 @@ rule setup_R:
     notebook:
         "notebooks/setupR.r.ipynb"
 
+# install IJulia on main conda env.
+rule setup_julia_environment_on_main_env:
+    output:
+        config["work_dir"]+"/JuliasetupDoneOnMain.txt"
+    params:
+        wdir = config["work_dir"]
+    shell:
+        """
+            julia -e 'using Pkg; Pkg.instantiate()'
+            julia -e 'using Pkg; Pkg.add("IJulia")'
+            julia -e 'using Pkg; Pkg.add("Revise")'
+            touch {params.wdir}/JuliasetupDoneOnMain.txt
+        """
+
+# installs IJulia on R conda env
 rule setup_julia_environment:
+    input:
+        config["work_dir"]+"/RsetupDone.txt",
+        config["work_dir"]+"/JuliasetupDoneOnMain.txt"
     output:
         config["work_dir"]+"/JuliasetupDone.txt"
     params:
-        julia_project_location = "scripts/julia_modules/JuliaClusterAndTreeTools/"
+        julia_project_location = "scripts/julia_modules/JuliaClusterAndTreeTools/",
+	wdir = config["work_dir"]
+    threads: 32
+    conda:
+        "envs/R_env.yaml"
     shell:
         """
             cwd=`pwd`
             cd {params.julia_project_location}
             julia -e 'using Pkg; Pkg.instantiate()'
             julia -e 'using Pkg; Pkg.add("IJulia")'
-            julia -e 'using Pkg; Pkg.add("Revise")'
+            julia -e 'using Pkg; Pkg.build("IJulia")'
+            julia -e 'using Pkg; Pkg.add("RCall")'
+            julia -e 'using Pkg; Pkg.build("RCall")'
             julia --project=. -e 'using Pkg; Pkg.instantiate()'
             julia --project=. -e 'using Pkg; Pkg.precompile()'
             julia --project=. -e 'using Pkg; Pkg.build()'
             cd $cwd
-            touch analysis_large/JuliasetupDone.txt
+            touch {params.wdir}/JuliasetupDone.txt
         """
 
 rule target:
