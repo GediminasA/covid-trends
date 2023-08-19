@@ -54,3 +54,4 @@ dependencies:
   - r-ggh4x
   - r-svglite
   - bioconductor-fgsea
+  - r-kendall

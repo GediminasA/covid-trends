@@ -10,6 +10,7 @@ include: "snakefiles/mink_analysis.smk"
 include: "snakefiles/downasmpling4timetree.smk"
 include: "snakefiles/downasmpling4timetree_clustered.smk"
 include: "snakefiles/summarising_analyses.smk"
+include: "snakefiles/haplotypes_analysis.smk"
 
 rule setup_R:
     output:

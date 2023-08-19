@@ -116,7 +116,7 @@ rule get_entropies:
         #expand(rez_dir + "/lineages/{id}/sprotein/reference_based_mutations_{id}_data.csv",id=['AY.4.5', 'Q.1', 'B.1.1.7', 'B.1.177.60', 'BA.2', 'BA.2.9'])
         #expand(rez_dir + "/lineages/{id}/ids_lt.txt",id=['BA.2'])
         #expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_sequences_conservation_all.csv",id=lineages,scope=["lt","all"])
-        expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_contacts_vs_conservation.csv",id=lineages,scope=["lt","all"])
+        #expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_contacts_vs_conservation.csv",id=lineages,scope=["lt","all"])
 
 
 
