@@ -29,6 +29,8 @@ rule clean_haplotypes_initial:
         haplotypes = work_dir + "/haplotype_info_initial_clean.csv"
     log:
         haplotypes = work_dir + "/haplotype_info_initial_clean.log"
+    conda:
+        "../envs/R_env.yaml"
     notebook:
         "../notebooks/get_haplotypes_initial_clean.r.ipynb"
 
@@ -80,7 +82,7 @@ rule analyse_S_protein_haplotype:
          -p wdir {params.cwd} -p outfile {output.haplotypes} \
          -p haplotype {input.haplotypes} \
          -p meta {input.meta} \
-         -p contacs {input.contacts} \
+         -p contacts {input.contacts} \
          -p pangolin {input.pangolin} \
          -p environment {params.environment} """
 
