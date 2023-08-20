@@ -54,6 +54,8 @@ rule analyse_conservation:
     log:
         log = rez_dir + "/lineages/{id}/sprotein/all_{id}_sequences_conservation_all.ipynb"
     threads: 16
+    conda:
+        "../envs/R_env.yaml"
     shell:
         """
         papermill scripts/julia_modules/JuliaClusterAndTreeTools/notebooks/sprot_entropy.ipynb \
@@ -70,6 +72,8 @@ rule analyse_conservation_lt:
     log:
         log = rez_dir + "/lineages/{id}/sprotein/lt_{id}_sequences_conservation_all.ipynb"
     threads: 16
+    conda:
+        "../envs/R_env.yaml"
     shell:
         """
         papermill scripts/julia_modules/JuliaClusterAndTreeTools/notebooks/sprot_entropy.ipynb \
@@ -87,6 +91,8 @@ rule analyse_reference_based:
     log:
         log = rez_dir + "/lineages/{id}/sprotein/reference_based_mutations_{id}_conservation.r.ipynb",
     threads: 16
+    conda:
+        "../envs/R_env.yaml"
     shell:
         """
         papermill notebooks/get_reference_based_mutationsdev.ipynb \
@@ -108,6 +114,7 @@ rule analyse_contact_enrichment:
     notebook:
         "notebooks/analyse_contacts_vs_conservation.r.ipynb"
 
+
 rule get_entropies:
     input:
         #expand(rez_dir + "/lineages/{id}/sprotein/all_sequences.fasta.gz",id = ["BA.2"])
@@ -116,7 +123,7 @@ rule get_entropies:
         #expand(rez_dir + "/lineages/{id}/sprotein/reference_based_mutations_{id}_data.csv",id=['AY.4.5', 'Q.1', 'B.1.1.7', 'B.1.177.60', 'BA.2', 'BA.2.9'])
         #expand(rez_dir + "/lineages/{id}/ids_lt.txt",id=['BA.2'])
         #expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_sequences_conservation_all.csv",id=lineages,scope=["lt","all"])
-        #expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_contacts_vs_conservation.csv",id=lineages,scope=["lt","all"])
+        expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_contacts_vs_conservation.csv",id=lineages,scope=["lt","all"])
 
 
 

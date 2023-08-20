@@ -2,3 +2,6 @@
 	path = scripts/julia_modules/JuliaClusterAndTreeTools
 	url = git@github.com:GediminasA/JuliaClusterAndTreeTools.git
 	branch = workflow
+[submodule "data/covid-lt-contacts"]
+	path = data/covid-lt-contacts
+	url = git@github.com:merkys/covid-lt-contacts.git

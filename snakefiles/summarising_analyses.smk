@@ -32,3 +32,19 @@ rule most_abundand_lineages:
         "../envs/R_env.yaml"
     notebook:
         "notebooks/most_abundand_lineages.r.ipynb"
+
+
+rule summarise_analyse_contact_enrichment:
+    input:
+        lt = expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_contacts_vs_conservation.csv",id=lineages,scope=["lt",]),
+        all = expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_contacts_vs_conservation.csv",id=lineages,scope=["all",]),
+        abundance_dates_per_lineage = rez_dir + "/abundance_dates_per_lineage.csv", 
+    log:
+        notebook = rez_dir + "/contact_enrichment.ipynb"
+    output:
+        data = rez_dir + "/contact_enrichment.csv",
+        image = rez_dir + "/contact_enrichment.svg",
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "../notebooks/summarise_analyse_contact_enrichment.r.ipynb"

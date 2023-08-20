@@ -55,3 +55,4 @@ dependencies:
   - r-svglite
   - bioconductor-fgsea
   - r-kendall
+  - papermill=2.3.4
