@@ -115,6 +115,27 @@ rule analyse_contact_enrichment:
         "notebooks/analyse_contacts_vs_conservation.r.ipynb"
 
 
+
+rule summarise_analyse_contact_enrichment_per_position:
+    input:
+        lt = expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_sequences_conservation_all.csv",id=lineages,scope=["lt",]),
+        all = expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_sequences_conservation_all.csv",id=lineages,scope=["all",]),
+        abundance_dates_per_lineage = rez_dir + "/abundance_dates_per_lineage.csv", 
+        contacts = config["antibody_contacts_data"] 
+    output:
+        data1 = rez_dir + "/contact_enrichment_per_position_1.csv",
+        data2 = rez_dir + "/contact_enrichment_per_position_2.csv",
+        image1 = rez_dir + "/contact_enrichment_per_position_1.svg",
+        image2 = rez_dir + "/contact_enrichment_per_position_2.svg",
+    params:
+        lineages = lineages
+    conda:
+        "../envs/R_env.yaml"
+    log:
+        notebook = rez_dir + "/contact_enrichment_per_position.log.ipynb"
+    notebook:
+        "../notebooks/summarise_analyse_contact_enrichment_per_position.r.ipynb"
+
 rule get_entropies:
     input:
         #expand(rez_dir + "/lineages/{id}/sprotein/all_sequences.fasta.gz",id = ["BA.2"])
@@ -123,7 +144,8 @@ rule get_entropies:
         #expand(rez_dir + "/lineages/{id}/sprotein/reference_based_mutations_{id}_data.csv",id=['AY.4.5', 'Q.1', 'B.1.1.7', 'B.1.177.60', 'BA.2', 'BA.2.9'])
         #expand(rez_dir + "/lineages/{id}/ids_lt.txt",id=['BA.2'])
         #expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_sequences_conservation_all.csv",id=lineages,scope=["lt","all"])
-        expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_contacts_vs_conservation.csv",id=lineages,scope=["lt","all"])
+        #expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_contacts_vs_conservation.csv",id=lineages,scope=["lt","all"])
+        data = rez_dir + "/contact_enrichment_per_position.csv"
 
 
 

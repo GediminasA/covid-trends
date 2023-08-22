@@ -55,4 +55,6 @@ dependencies:
   - r-svglite
   - bioconductor-fgsea
   - r-kendall
+  - r-truncnorm=1.0_9
+  - r-ggvenn
   - papermill=2.3.4

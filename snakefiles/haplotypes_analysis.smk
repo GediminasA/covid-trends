@@ -67,9 +67,13 @@ rule analyse_S_protein_haplotype:
         contacts = rez_dir + "/contacts_per_cluster.csv",
         pangolin = rez_dir+"/pangolin_lineage_report.csv",
     output:
-        haplotypes = work_dir + "/haplotype_info_initial_clean_Sprotein_analysis.csv" #nextclade outfile
+        review = rez_dir + "/info_on_cluster_and_contacts_review.png",
+        all_trend = rez_dir + "/info_on_cluster_and_contacts_over_time_all.svg",
+        lt_trend = rez_dir + "/info_on_cluster_and_contacts_over_time_lt.svg",
+        taus = rez_dir + "/info_on_cluster_and_contacts_over_time.csv",
+        haplotypes = work_dir + "/haplotype_info_lt_per_month.csv"
     log:
-        haplotypes = work_dir + "/haplotype_info_initial_clean_Sprotein_analysis.log.ipynb" #nextclade outfile
+        haplotypes = work_dir + "/haplotype_info_lt_per_month.log.ipynb"
     params:
         environment = "scripts/julia_modules/JuliaClusterAndTreeTools",
         cwd =  os.getcwd()
@@ -78,11 +82,17 @@ rule analyse_S_protein_haplotype:
         "../envs/R_env.yaml"
     shell:
         """export JULIA_NUM_THREADS={threads}
-        papermill --prepare-only --progress-bar  notebooks/get_S_haplotypes_analysis.jl.ipynb {log} \
+        papermill  --progress-bar  notebooks/get_S_haplotypes_analysis.jl.ipynb {log} \
          -p wdir {params.cwd} -p outfile {output.haplotypes} \
          -p haplotype {input.haplotypes} \
          -p meta {input.meta} \
          -p contacts {input.contacts} \
          -p pangolin {input.pangolin} \
-         -p environment {params.environment} """
+         -p environment {params.environment} \
+         -p review {output.review} \
+         -p all_trend {output.all_trend} \
+         -p lt_trend {output.lt_trend} \
+         -p taus {output.taus} \
+         -p haplotypes {output.haplotypes}
+         """
 
