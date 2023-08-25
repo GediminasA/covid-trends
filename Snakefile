@@ -11,6 +11,7 @@ include: "snakefiles/downasmpling4timetree.smk"
 include: "snakefiles/downasmpling4timetree_clustered.smk"
 include: "snakefiles/summarising_analyses.smk"
 include: "snakefiles/haplotypes_analysis.smk"
+include: "snakefiles/binding_evaluation.smk"
 
 rule setup_R:
     output:
