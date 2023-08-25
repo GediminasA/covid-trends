@@ -96,3 +96,25 @@ rule analyse_S_protein_haplotype:
          -p haplotypes {output.haplotypes}
          """
 
+rule select_4_analysis:
+    input:
+        df_file = work_dir + "/haplotype_info_lt_per_month.csv",
+        haplotype = work_dir + "/haplotype_info_initial_clean_Sprotein.csv.gz",
+        contacts = rez_dir + "/contacts_per_cluster.csv",
+        antibody_contacts_data_pdbwise = config["antibody_contacts_data_pdbwise"],
+        pdb_cluster_assignments = config["antibody_contacts_data_cluster_assignments"],
+    output:
+        additional_data = rez_dir + "/select_mutants_against_antibodies_additional_info.csv",
+        chosen_data = rez_dir + "/select_mutants_against_antibodies.csv",
+    params:
+        max_sructures_to_test_per_month4antib = config["max_sructures_to_test_per_month4antib"]
+    log:
+        notebook = rez_dir + "/select_mutants_against_antibodies.ipynb.log",
+    conda:
+        "../envs/R_env.yaml"
+    notebook:
+        "../notebooks/select_mutants_against_antibodies.r.ipynb"
+
+rule run_haplotypes_analysis:
+    input:
+        rez_dir + "/select_mutants_against_antibodies.csv",

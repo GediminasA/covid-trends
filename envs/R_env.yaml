@@ -58,3 +58,4 @@ dependencies:
   - r-truncnorm=1.0_9
   - r-ggvenn
   - papermill=2.3.4
+  - r-r.utils
