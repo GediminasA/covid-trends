@@ -18,21 +18,27 @@ rule setup_binding_submodule:
 
 rule run_antibodies_evaluation:
     input:
-        aa = wdirb + "/setup_done.txt",
+        setup_marker = wdirb + "/setup_done.txt",
         test_data = "data/example_4binding.csv",
         data = rez_dir + "/select_mutants_against_antibodies.csv",
         structures = "data/covid-lt-contacts/pdb/antibodies/complexes"
     output:
-        "binding_evaluator/analyzis_runs/rezults/promod_models_results_full.csv"
+        "binding_evaluator/analysis_runs/rezults/promod_models_results_full.csv"
+    log:
+         wdirb + "/binding_evaluation.log",
     params:
-        wdir = "analyzis_runs"
+        wdir = "analysis_runs",
+        starting_dir = os.getcwd()  
     conda: "../binding_evaluator/envs/binding_evaluator.yaml"
     shell:
         """
             cd binding_evaluator
+            script -efq -c '\
             snakemake --profile local --configfile configs/antibody.yaml --rerun-incomplete  \
             -k get_summary_of_binding \
-            --config workdir={params.wdir}  
+            --config workdir={params.wdir} \
+            '  |& tee -i {params.starting_dir}/{log} 
+            echo "LOG OF BINDING EVALUATION'S WORKFLOW: {params.starting_dir}/{log}"
         """
 
 
