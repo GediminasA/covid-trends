@@ -1,0 +1,18 @@
+work_dir: analysis_example
+sequences: test_data/four_lt_lineages_genomic.fasta #/home/user/data/databases/covid/gisaid_data/sequences.fasta 
+meta: test_data/four_lt_lineages_meta.csv #/home/user/data/databases/covid/gisaid_data/metadata.csv
+pangolin: #test_data/pangolin_lineage_report.csv
+datasets_dir: datasets
+antibody_contacts_data: data/covid-lt-contacts/pdb/antibodies/complexes/clusters/contacts-..tab 
+antibody_contacts_data_pdbwise: data/covid-lt-contacts/pdb/antibodies/complexes/contact-maps/distances/..tab
+antibody_contacts_data_cluster_assignments: data/covid-lt-contacts/pdb/antibodies/complexes/clusters/clusters.lst
+max_sructures_to_test_per_month4antib: 3 
+lineages: "B.1.177.60	BA.2 BA.2.9 B.1.1.7" 
+reference_id: 'MN908947 (Wuhan-Hu-1/2019)'
+reference_lineage: "BA.2"
+cleanup_keep_fraction_of_columns: 0.80
+cleanup_remove_proc_mostN_having: 20
+target_amount: 12000
+subset_amount_maximum: 30
+maximum_amount_4_splits: 2000
+reference: datasets/NC_045512.gb

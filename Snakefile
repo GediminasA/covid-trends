@@ -70,6 +70,7 @@ rule target:
         report = rez_dir+"/pangolin_lineage_report.csv"
         #rez_dir+"/initial_set.fasta",
 
+
 rule run_pangolin:
     input:
         fasta = config["sequences"]
@@ -79,15 +80,22 @@ rule run_pangolin:
         out_dir = rez_dir,    
         tmp_dir = tmp_dir + "/pangolin_analysis", 
         alignment = "alignment_minimap.fasta",
-        report = "pangolin_lineage_report.csv"
+        report = "pangolin_lineage_report.csv",
+        precomputed = config["pangolin"],
     conda:
         "envs/pangolin.yaml"
     threads: 80
     shell:
         """
-            pangolin --add-assignment-cache
-	    mkdir -p {params.tmp_dir}
-            pangolin --use-assignment-cache -t {threads} --outfile {params.report} --outdir {params.out_dir}  --tempdir {params.tmp_dir}   --alignment-file {params.alignment}  --analysis-mode fast  --alignment {input.fasta}
+            if [ {params.precomputed} = "None" ]; then
+                mkdir -p {params.tmp_dir}
+                pangolin --update-data  
+                pangolin --add-assignment-cache 
+                pangolin --use-assignment-cache -t {threads} --outfile {params.report} --outdir {params.out_dir}  --tempdir {params.tmp_dir}   --alignment-file {params.alignment}  --analysis-mode pangolearn  --alignment {input.fasta}
+            else
+                echo "Copying precomputed pangolin data"
+                ln -rs {params.precomputed} {output}
+            fi
         """ 
 
 rule download_covid_dataset:
