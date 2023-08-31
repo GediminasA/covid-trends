@@ -116,26 +116,6 @@ rule analyse_contact_enrichment:
 
 
 
-rule summarise_analyse_contact_enrichment_per_position:
-    input:
-        lt = expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_sequences_conservation_all.csv",id=lineages,scope=["lt",]),
-        all = expand(rez_dir + "/lineages/{id}/sprotein/{scope}_{id}_sequences_conservation_all.csv",id=lineages,scope=["all",]),
-        abundance_dates_per_lineage = rez_dir + "/abundance_dates_per_lineage.csv", 
-        contacts = config["antibody_contacts_data"] 
-    output:
-        data1 = rez_dir + "/contact_enrichment_per_position_1.csv",
-        data2 = rez_dir + "/contact_enrichment_per_position_2.csv",
-        image1 = rez_dir + "/contact_enrichment_per_position_1.svg",
-        image2 = rez_dir + "/contact_enrichment_per_position_2.svg",
-    params:
-        lineages = lineages
-    conda:
-        "../envs/R_env.yaml"
-    log:
-        notebook = rez_dir + "/contact_enrichment_per_position.log.ipynb"
-    notebook:
-        "../notebooks/summarise_analyse_contact_enrichment_per_position.r.ipynb"
-
 rule get_entropies:
     input:
         #expand(rez_dir + "/lineages/{id}/sprotein/all_sequences.fasta.gz",id = ["BA.2"])

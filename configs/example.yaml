@@ -1,6 +1,6 @@
 work_dir: analysis_example
-sequences: test_data/four_lt_lineages_genomic.fasta #/home/user/data/databases/covid/gisaid_data/sequences.fasta 
-meta: test_data/four_lt_lineages_meta.csv #/home/user/data/databases/covid/gisaid_data/metadata.csv
+sequences: test_data/four_lt_lineages_genomic_renamed.fasta #/home/user/data/databases/covid/gisaid_data/sequences.fasta 
+meta: test_data/four_lt_lineages_genomic_renamed_meta.csv #/home/user/data/databases/covid/gisaid_data/metadata.csv
 pangolin: #test_data/pangolin_lineage_report.csv
 datasets_dir: datasets
 antibody_contacts_data: data/covid-lt-contacts/pdb/antibodies/complexes/clusters/contacts-..tab 

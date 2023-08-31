@@ -16,5 +16,7 @@ dependencies:
   - r-dtplyr
   - r-patchwork
   - r-fitdistrplus
+  - r-tidyverse
+  - r-DT
   - seqkit
    
