@@ -23,7 +23,7 @@ This project has received funding from European Regional Development Fund (proje
     conda install -c conda-forge mamba
 ```
 
-4. Clone the repository. nd enter it. Note - it contains submodules.
+4. Clone the repository and enter it. Note - it contains submodules!!!
 ```bash 
     git clone --recurse-submodules  git@github.com:GediminasA/covid-trends.git
     cd covid-trends
