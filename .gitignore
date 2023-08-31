@@ -1,0 +1,15 @@
+notebooks/raport_template.R
+notebooks/raport_template.Rmd
+analysis_*
+.RData
+.Rhistory
+.snakemake/
+.vscode/
+data/pango/
+datasets/
+logs/
+notebooks/.ipynb_checkpoints/
+notebooks/output.txt
+notebooks/raport.html
+notebooks/untitled.py
+raport_files/
