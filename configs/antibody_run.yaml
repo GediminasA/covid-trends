@@ -1,0 +1,1 @@
+snakemake --profile local --configfile configs/antibody.yaml --rerun-incomplete -k --config-file configs/antibody_run.yaml get_summary_of_binding
