@@ -1,0 +1,241 @@
+---
+title: "Trends in COVID"
+output: html_document
+date: "2023-08-31"
+params:
+   rmd: "report.Rmd"
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(dplyr)
+library(tidyverse)
+library(grImport2)
+library(rsvg)
+library(DT)
+if (!exists("snakemake") | interactive()) {
+  source("raport_template.R") # for development
+  knitr::opts_knit$set(root.dir = '/home/user/data/gediminas/covid-phylogeny/') # for development
+} else {
+  source("notebooks/raport_template.R") # for development
+}
+```
+# Characteristics of SARS-CoV-2 spread in lithuania
+# Most abundant lineages
+```{r, echo =F}
+abundance <- fread(snakemake@input$most_abundad_lt)
+abundance %>%
+  datatable(extensions = 'Buttons',
+            caption = "Frequency of SARS-CoV-2 lineages in Lithuania based on provided data",
+            options = list(dom = 'Blfrtip',
+                           title = "qq",
+                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                           lengthMenu = list(c(10,25,50,-1),
+                                             c(10,25,50,"All"))))
+```
+
+## Evolutionary stability comparision
+
+```{r tb1, echo =F}
+data <- fread(snakemake@input$estimates_of_stability_data)
+data %>%
+  datatable(extensions = 'Buttons',
+            caption = "Lineage wise stability estimates",
+            options = list(dom = 'Blfrtip',
+                           title = "qq",
+                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                           lengthMenu = list(c(10,25,50,-1),
+                                             c(10,25,50,"All"))))
+```
+
+___
+
+### Pairwise stability comparison results for Lithuanian lineages
+
+```{r cc, echo = F}
+knitr::include_graphics(path = paste(getwd(),snakemake@input$estimates_of_statistical_paurwise_comp_image,sep="/"),
+                        rel_path = F,
+                        )
+
+```
+
+For each lineage a maximum distance (in days) between any of two sequences in cluster were calculated (D) for each cluster and compared with a reference lineage BA.2. The y-axis denotes the difference between mean D values comparing a lineage and BA.2 expressed as relative change. The positives values indicates greater stability and negative values denote lower stability  using BA.2 lineage as a reference. The upper panel denotes significances of comparisons using different statistical tests, the red color denotes cases were the difference between a lineage and BA.2 lineage was found to be of low significance (p > 0.05)
+
+---
+
+
+### Stability of lineages calculated using two methods
+
+```{r bb, echo = F}
+knitr::include_graphics(path = paste(getwd(),snakemake@input$estimates_of_stability_image,sep="/"),
+                        rel_path = F,
+                        )
+
+```
+The upper panel denotes results of pairwise comparisons when all lineages were compared to the reference lineage “BA.2”. The Y axis denotes the  analyzing all together or each lineage a maximum distance (in days) between any of two sequences in cluster were calculated (D) for each cluster and compared with a reference lineage BA.2. The y-axis denotes the difference between mean D values comparing a lineage and BA.2 expressed as relative change. The positives values indicates greater stability and negative values denote lower stability – the values are indicated at the bottom of the plot. The lower panel denotes results of one way ANOVA based on zero-inflated Negative Binomial distribution. The y-axis denotes estimated marginal (EM)  mean of D and the error bar denotes the  the 95% confidence interval of the EM mean. The values of EM mean for each lineage are indicated at the bottom of the plot.
+
+---
+
+### Stability changes over time for wide spread lineages
+
+```{r aa, echo = F } 
+
+#ab <- image_read(snakemake@input$time_trend_of_stability_image)
+#plot(ab)
+knitr::include_graphics(path = paste(getwd(),snakemake@input$time_trend_of_stability_image,sep="/"),
+                        rel_path = F,
+                        )
+```
+
+The left panel (a) shows time trend of stability calculated as percentage difference compared to BA.2 lineage. The size of the dots denote the size of the cluster used for analysis, labels by the dots indicated the lineage and the color indicates results of Wilcoxon pairwise test with alternative hypothesis “not equal” comparing against BA.2.  Also the corresponding Pearson correlation is indicated along with its significance estimate. The right panel (b) shows time trend of stability represented by the lower 95% confidence limit of EM mean (asymnp.LCL).  The size of the dots denote the size of the cluster used for analysis, labels by the dots indicated the lineage. Also the results of Pearson correlation for the time trend  of EM mean and its  lower 95% confidence limit are indicated at the top and bottom.
+
+---
+
+
+## Enrichment of positions with incresed sequence variability
+
+### Lineage-wise contacts enrichment.
+
+
+
+```{r dd, echo = F } 
+
+#ab <- image_read(snakemake@input$time_trend_of_stability_image)
+#plot(ab)
+knitr::include_graphics(path = paste(getwd(),snakemake@input$contacts_enrichment_svg,sep="/"),
+                        rel_path = F,
+                        )
+```
+
+
+
+In the panels a  and b x-axis denotes a lineage which is indicated in the panel b. The lineages are  ordered from the oldest to the newest ones. On the y-axis of panel a, the Fde (fraction of clusters of antibodies) that reveals significant differences is shown, comparing entropy values between residues in contact with antibodies and those not in contact, with the significance determined by the Wilcoxon test. The y-axis of panel b shows absolute changes in entropy values comparing positions for contacting and non contacting residues with the set of contacting residues was composed based on all antibody clusters. The y-axis in panel c denotes the Fde and the x-axis denotes month at which a lineage reached its maximum abundance. 
+
+
+```{r tb2, echo =F}
+data <- fread(snakemake@input$contacts_enrichment_csv)
+data %>%
+  datatable(extensions = 'Buttons',
+            caption = "Lineage-wise contacts enrichmen comparing antibodies contacting and non contacting residues",
+            options = list(dom = 'Blfrtip',
+                           title = "qq",
+                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                           lengthMenu = list(c(10,25,50,-1),
+                                             c(10,25,50,"All"))))
+```
+
+---
+
+
+## Enriched positions
+
+
+### Positions with increased  number of mutations at antibodies clusters contacting residues derived from lineage-wise analysis.P
+
+```{r ee, echo = F } 
+
+#ab <- image_read(snakemake@input$time_trend_of_stability_image)
+#plot(ab)
+knitr::include_graphics(path = paste(getwd(),snakemake@input$contact_per_pos_image2,sep="/"),
+                        rel_path = F,
+                        )
+```
+The left panel denotes the positions for each analyzed lineages. The lineages are indicated by the facet labels (y-axis).  The sequence positions are indicated in the x-axis. The size of dots denotes number of structural antibodies clusters that contacts with a position. Color denotes positional sequence cluster derived from hierarchical clustering with complete linkage, flattening cut-off  based on 100 sequence positions. The right panel denotes changes over time in number of contacting structural antibodies clusters for each positional cluster. The facet labels and colors denote the positional clusters, the colors in both right and left panels matches the same positional cluster. Each dot in the right panel denote a lineage, x-axis denotes the   month when the abundance of a lineage peaked. On the top of the results of  corresponding Spearman correlation test are indicated.  
+
+---
+
+### Positions with increased  number of antibodies clusters contacting comparing wordwide and regional analysis.
+
+
+```{r ff, echo = F } 
+
+#ab <- image_read(snakemake@input$time_trend_of_stability_image)
+#plot(ab)
+knitr::include_graphics(path = paste(getwd(),snakemake@input$contact_per_pos_image1,sep="/"),
+                        rel_path = F,
+                        )
+```
+
+The left panel (a) denotes the positions for each analyzed lineages. The lineages are indicated by the facet right labels, the scope of the analysis is indicated by the left labels. “all” denotes analysis based on all GISAID data, “lt” denotes analysis using subset of  Lithuanian sequences.  The sequence positions are indicated in the x-axis. The size of dots denotes number of structural antibodies clusters that contacts with a position. Color denotes positional sequence cluster derived from hierarchical clustering with complete linkage, flattening cut-off  based on 100 sequence positions. The right panel denotes match between positions that were detected as having increased number of antibodies contacting residues based on worldwide and Lithuanian lineages. The positions were considered to be matching if distance between them was less than 10 sequence positions apart.  
+
+```{r tb3, echo =F}
+data <- fread(snakemake@input$contact_per_pos_data2)
+data %>%
+  datatable(extensions = 'Buttons',
+            caption = "Position with significantly higher variation for Lithuanian sequences. Only positions that were observed as significantly different at least for two antibody clusters are shown.",
+            options = list(dom = 'Blfrtip',
+                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                           lengthMenu = list(c(10,25,50,-1),
+                                             c(10,25,50,"All"))))
+```
+
+## Impact per antobody cluster clusters
+
+### Number of mutations at position of contacting antibodies residues. 
+
+```{r naa, echo = F}
+knitr::include_graphics(path = paste(getwd(),snakemake@input$hap_review ,sep="/"),
+                        rel_path = F,
+                        )
+```
+
+X-axis matches a month and Y-axis matches the number of mutations at the positions of  the contacting antibodies residues. Panels a and b denotes number of mutations considering all strains. Upper panels (a,c) denote worldwide data, lower panels (b,c) denote a subset matching to  Lithuania.  Panels c and d denotes only data matching the most abundant month-wise lineages. The pink transparent line in panels a and b denotes number of GISAID deposited sequence originating either from all world or Lithuania respectively.
+
+---
+
+### Changes over time of contacts per each antibody cluster
+
+```{r na, echo = F}
+knitr::include_graphics(path = paste(getwd(),snakemake@input$hap_all_trend ,sep="/"),
+                        rel_path = F,
+                        )
+```
+
+
+The left panel (a) denotes changes over time for each analyzed cluster
+individually. The top facet denotes the set of positions matching unipn
+of all clusters. The cluster-wise facets from top to bottom are ordered
+based on tau values of Mann-Kendall test for trend test of time derived
+from worldwide GISAID sequences. If the corresponding p > 0.05, tau
+values were not indicated. The tau values “NA” denotes cases with
+insignificant time related trends. The right panel (b) denotes regions of
+sequence positions along protein S that match the epitopic region of the
+structural antibodies clusters. These regions result from hierarchical
+clustering with complete linkage, flattening cut-off based on 100
+sequence positions.
+
+
+---
+
+### Changes over time of contacts per each antibody cluster for regional sequences.
+
+
+```{r nb, echo = F}
+knitr::include_graphics(path = paste(getwd(),snakemake@input$hap_lt_trend ,sep="/"),
+                        rel_path = F,
+                        )
+```
+
+
+The plots denotes changes over time for each analyzed cluster individually. The top facet denotes the set of positions matching union of all clusters. The  cluster-wise facets from top to bottom are ordered based on tau values of Mann-Kendall  test for trend test of time derived from worldwide GISAID sequences. If the corresponding  p > 0.05, tau values were not indicated. The tau values “NA” denotes cases with insignificant time related trends. 
+
+---
+
+
+```{r naaa, echo = F}
+
+data <- fread(snakemake@input$hap_taus)
+data %>%
+  datatable(extensions = 'Buttons',
+            caption = "Mutation accumulation at antibodies contacting residues across all explored antibody clusters. The Number of positoins column denotes number of sequence positions in protein S sequence that matches residues contacting a particular cluster of antibodies structural cluster denoted by the column “Cluster”. The positions clusters  result from hierarchical clustering with complete linkage, flattening cut-off  based on 100 sequence positions. If Mann-Kendall  test for trend test of time resulted in p > 0.05, tau values were not indicated. The rows are sorted based on the tau values derived fro worldwide GISAID data.",
+            options = list(dom = 'Blfrtip',
+                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                           lengthMenu = list(c(10,25,50,-1),
+                                             c(10,25,50,"All"))))
+```
+
+
+
+
+
+

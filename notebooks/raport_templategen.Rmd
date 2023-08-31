@@ -1,0 +1,48 @@
+---
+title: "Trends in COVID"
+output: html_document
+date: "2023-08-31"
+params:
+   rmd: "report.Rmd"
+   template: "notebooks/raport_template.R"
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+l = readLines(params$rmd)
+#l = readLines("./raport_template.R")
+ct = 0
+ct2 = 0
+out = list()
+for (s in l){
+  ct  = ct + 1
+ if ( 
+   !grepl("```",s) &  
+   !grepl("###",s) & 
+   !grepl("print",s) & 
+   !grepl("copy",s) & 
+   !grepl("knitr",s) & 
+   !grepl("file",s) &
+   ct >8
+   ) {
+   ct2 = ct2 + 1
+   if (grepl("readLines",s)) {
+     break
+   }
+   out[[ct2]] = s
+ }
+   
+}
+out = paste(out, collapse="\n")
+fileConn<-file(params$template)
+writeLines(out, fileConn)
+close(fileConn)
+print(out)
+
+
+
+
+```
+
