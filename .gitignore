@@ -13,3 +13,5 @@ notebooks/output.txt
 notebooks/raport.html
 notebooks/untitled.py
 raport_files/
+mutationcounts_per_month_most_abund_lineageLT.tsv
+pairplot.svg

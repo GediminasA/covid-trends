@@ -1,7 +1,8 @@
 ---
 title: "Trends in COVID"
-output: html_document
-date: "2023-08-31"
+output:
+   html_document:
+      self_contained: true
 params:
    rmd: "report.Rmd"
 ---
@@ -10,8 +11,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(data.table)
 library(dplyr)
 library(tidyverse)
-library(grImport2)
-library(rsvg)
 library(DT)
 if (!exists("snakemake") | interactive()) {
   source("raport_template.R") # for development
