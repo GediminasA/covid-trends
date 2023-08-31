@@ -1,4 +1,4 @@
-name: covid-phylogeny
+name: covid-trends
 channels:
   - bioconda
   - conda-forge
