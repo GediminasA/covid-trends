@@ -46,7 +46,7 @@ rule run_antibodies_evaluation:
         conf = "binding_evaluator/configs/antibody_runs.yaml"
     output:
         run_scripts = "binding_evaluator/analysis_of_antibodies_runs.sh",
-        #rezults = "binding_evaluator/analysis_of_antibodies_runs/rezults/promod_models_results_full.csv"
+        rezults = "binding_evaluator/analysis_of_antibodies_runs/rezults/sequence_variants_per_ddG.csv"
     log:
          wdirb + "/binding_evaluation.log",
     params:
@@ -54,6 +54,7 @@ rule run_antibodies_evaluation:
         starting_dir = os.getcwd(), 
         localconf = "configs/antibody_runs.yaml",
     conda: "../binding_evaluator/envs/binding_evaluator.yaml"
+    retries: 3
     shell:
         """
             cd binding_evaluator
@@ -68,7 +69,16 @@ rule run_antibodies_evaluation:
         """
 
 
-    
+rule visualise_antibodies_evaluations:
+    input:
+        preds = "binding_evaluator/analysis_of_antibodies_runs/rezults/sequence_variants_per_ddG.csv",
+        additional_data = rez_dir + "/select_mutants_against_antibodies_additional_info.csv",
+    output:
+        csv4rep = "mutants_against_antibodies_rezdata.csv",
+        png4rep = "mutants_against_antibodies_rezdata.png",
+    notebook:
+        "../notebooks/summarise_antibodies_ddg_rez.r.ipynb"
+ 
     
 
 rule get_config_4_ace2_evaluation:
@@ -107,6 +117,7 @@ rule run_ace2_evaluation:
         starting_dir = os.getcwd(), 
         localconf = "configs/ace2_runs.yaml",
     conda: "../binding_evaluator/envs/binding_evaluator.yaml"
+    retries: 3
     shell:
         """
             cd binding_evaluator
