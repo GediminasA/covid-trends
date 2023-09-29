@@ -109,7 +109,7 @@ rule run_ace2_evaluation:
         conf = "binding_evaluator/configs/ace2_runs.yaml"
     output:
         run_scripts = "binding_evaluator/analysis_of_ace2_runs.sh",
-        #rezults = "binding_evaluator/analysis_of_antibodies_runs/rezults/promod_models_results_full.csv"
+        rezults = "binding_evaluator/analysis_of_ace2_runs/rezults/sequence_variants_per_ddG.csv"
     log:
          wdirb + "/binding_evaluation.log",
     params:
@@ -130,6 +130,19 @@ rule run_ace2_evaluation:
             #script -efq -c " ./$script"  |& tee -i {params.starting_dir}/{log} 
             echo "LOG OF BINDING EVALUATION'S WORKFLOW: {params.starting_dir}/{log}"
         """
+
+rule visualise_ace2_evaluations:
+    input:
+        preds = "binding_evaluator/analysis_of_ace2_runs/rezults/sequence_variants_per_ddG.csv",
+        additional_data = rez_dir + "/select_mutants_against_ace2_additional_info.csv",
+    output:
+        csv4rep = "mutants_against_ace2_rezdata.csv",
+        png4rep = "mutants_against_ace2_rezdata.png",
+    notebook:
+        "../notebooks/summarise_antibodies_ddg_rez.r.ipynb"
+
+
+
 
 rule run_binding:
     input:
