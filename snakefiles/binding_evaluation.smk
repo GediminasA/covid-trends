@@ -48,23 +48,24 @@ rule run_antibodies_evaluation:
         run_scripts = "binding_evaluator/analysis_of_antibodies_runs.sh",
         rezults = "binding_evaluator/analysis_of_antibodies_runs/rezults/sequence_variants_per_ddG.csv"
     log:
-         wdirb + "/binding_evaluation.log",
+         wdirb + "/binding_evaluation_antibidies.log",
     params:
         wdir = "analysis_of_antibodies_runs",
         starting_dir = os.getcwd(), 
         localconf = "configs/antibody_runs.yaml",
     conda: "../binding_evaluator/envs/binding_evaluator.yaml"
     retries: 3
+    threads: 64
     shell:
         """
             cd binding_evaluator
             echo snakemake --profile local \
-            --rerun-incomplete --configfile {params.localconf} -k -f get_summary_of_binding \
+            --rerun-incomplete --configfile {params.localconf} -k -f get_summary_of_binding -c {threads} \
             > {params.starting_dir}/{output.run_scripts} 
             script=`basename {output.run_scripts}`
             chmod a+x $script
             echo running $script in directory `pwd`
-            #script -efq -c " ./$script"  |& tee -i {params.starting_dir}/{log} 
+            script -efq -c " ./$script"  |& tee -i {params.starting_dir}/{log} 
             echo "LOG OF BINDING EVALUATION'S WORKFLOW: {params.starting_dir}/{log}"
         """
 
@@ -74,8 +75,8 @@ rule visualise_antibodies_evaluations:
         preds = "binding_evaluator/analysis_of_antibodies_runs/rezults/sequence_variants_per_ddG.csv",
         additional_data = rez_dir + "/select_mutants_against_antibodies_additional_info.csv",
     output:
-        csv4rep = "mutants_against_antibodies_rezdata.csv",
-        png4rep = "mutants_against_antibodies_rezdata.png",
+        csv4rep = rez_dir + "/mutants_against_antibodies_rezdata.csv",
+        png4rep = rez_dir + "/mutants_against_antibodies_rezdata.png",
     notebook:
         "../notebooks/summarise_antibodies_ddg_rez.r.ipynb"
  
@@ -111,23 +112,24 @@ rule run_ace2_evaluation:
         run_scripts = "binding_evaluator/analysis_of_ace2_runs.sh",
         rezults = "binding_evaluator/analysis_of_ace2_runs/rezults/sequence_variants_per_ddG.csv"
     log:
-         wdirb + "/binding_evaluation.log",
+         wdirb + "/binding_evaluation_ace2.log",
     params:
         wdir = "analysis_of_ace2_runs",
         starting_dir = os.getcwd(), 
         localconf = "configs/ace2_runs.yaml",
     conda: "../binding_evaluator/envs/binding_evaluator.yaml"
     retries: 3
+    threads: 64
     shell:
         """
             cd binding_evaluator
             echo snakemake --profile local \
-            --rerun-incomplete --configfile {params.localconf} -k -f get_summary_of_binding \
+            --rerun-incomplete --configfile {params.localconf} -k -f get_summary_of_binding  -c {threads} \
             > {params.starting_dir}/{output.run_scripts} 
             script=`basename {output.run_scripts}`
             chmod a+x $script
             echo running $script in directory `pwd`
-            #script -efq -c " ./$script"  |& tee -i {params.starting_dir}/{log} 
+            script -efq -c " ./$script"  |& tee -i {params.starting_dir}/{log} 
             echo "LOG OF BINDING EVALUATION'S WORKFLOW: {params.starting_dir}/{log}"
         """
 
@@ -136,8 +138,8 @@ rule visualise_ace2_evaluations:
         preds = "binding_evaluator/analysis_of_ace2_runs/rezults/sequence_variants_per_ddG.csv",
         additional_data = rez_dir + "/select_mutants_against_ace2_additional_info.csv",
     output:
-        csv4rep = "mutants_against_ace2_rezdata.csv",
-        png4rep = "mutants_against_ace2_rezdata.png",
+        csv4rep = rez_dir + "/mutants_against_ace2_rezdata.csv",
+        png4rep = rez_dir + "/mutants_against_ace2_rezdata.png",
     notebook:
         "../notebooks/summarise_antibodies_ddg_rez.r.ipynb"
 
