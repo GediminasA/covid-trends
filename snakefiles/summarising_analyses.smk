@@ -90,7 +90,11 @@ rule assemble_raport_template:
         hap_all_trend = rez_dir + "/info_on_cluster_and_contacts_over_time_all.svg",
         hap_lt_trend = rez_dir + "/info_on_cluster_and_contacts_over_time_lt.svg",
         hap_taus = rez_dir + "/info_on_cluster_and_contacts_over_time.csv",
-        hap_haplotypes = config["work_dir"]+"/tmp/haplotypes" + "/haplotype_info_lt_per_month.csv"
+        hap_haplotypes = config["work_dir"]+"/tmp/haplotypes" + "/haplotype_info_lt_per_month.csv",
+        binding_antib_csv4rep = rez_dir + "/mutants_against_antibodies_rezdata.csv",
+        binding_antib_png4rep = rez_dir + "/mutants_against_antibodies_rezdata.png",
+        binding_ace2_csv4rep = rez_dir + "/mutants_against_ace2_rezdata.csv",
+        binding_ace2_png4rep = rez_dir + "/mutants_against_ace2_rezdata.png",
     output:
         raport = tmp_dir + "/RAPORT4template.html",
     script:

@@ -6,7 +6,11 @@ datasets_dir: datasets
 antibody_contacts_data: data/covid-lt-contacts/pdb/antibodies/complexes/clusters/contacts-..tab 
 antibody_contacts_data_pdbwise: data/covid-lt-contacts/pdb/antibodies/complexes/contact-maps/distances/..tab
 antibody_contacts_data_cluster_assignments: data/covid-lt-contacts/pdb/antibodies/complexes/clusters/clusters.lst
-max_sructures_to_test_per_month4antib: 3 
+max_sructures_to_test_per_month4antib: 3
+ace2_contacts_data: data/covid-lt-contacts/pdb/ACE2/complexes/clusters/contacts-..tab 
+ace2_contacts_data_cluster_assignments: data/covid-lt-contacts/pdb/ACE2/complexes/clusters/clusters.lst
+ace2_contacts_data_pdbwise: data/covid-lt-contacts/pdb/ACE2/complexes/contact-maps/distances/..tab
+max_sructures_to_test_per_month4ace2: 3  
 lineages: "B.1.177.60	BA.2 BA.2.9 B.1.1.7" 
 reference_id: 'MN908947 (Wuhan-Hu-1/2019)'
 reference_lineage: "BA.2"
